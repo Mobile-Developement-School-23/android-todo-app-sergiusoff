@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/rounded_background"
+    android:alpha="1"
+    android:orientation="vertical">
+
+    <Button
+        style="@style/Widget.Material3.Button.TextButton"
+        android:textSize="14sp"
+        android:textColor="@color/blue"
+        android:textStyle="bold"
+        android:id="@+id/buttonActivate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Активировать" />
+
+    <Button
+        style="@style/Widget.Material3.Button.TextButton"
+        android:textSize="14sp"
+        android:textColor="@color/blue"
+        android:textStyle="bold"
+        android:id="@+id/buttonEdit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Редактировать" />
+
+    <Button
+        style="@style/Widget.Material3.Button.TextButton"
+        android:textSize="14sp"
+        android:textColor="@color/blue"
+        android:textStyle="bold"
+        android:id="@+id/buttonDetails"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Подробнее" />
+
+    <Button
+        style="@style/Widget.Material3.Button.TextButton"
+        android:textSize="14sp"
+        android:textColor="@color/blue"
+        android:textStyle="bold"
+        android:id="@+id/buttonDelete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Удалить" />
+
+</LinearLayout>

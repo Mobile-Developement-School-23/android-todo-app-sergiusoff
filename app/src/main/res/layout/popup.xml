@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+
+    android:background="@drawable/rounded_background"
+    android:alpha="1"
+    android:orientation="vertical">
+
+    <TextView
+        style="@style/body"
+        android:id="@+id/text_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:text="" />
+
+    <TextView
+        style="@style/body"
+        android:id="@+id/text"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:layout_margin="4dp"
+        android:scrollbars="vertical"/>
+
+    <TextView
+        style="@style/body"
+        android:id="@+id/importance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:text="TextView 1" />
+
+    <TextView
+        style="@style/body"
+        android:id="@+id/create"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:text="TextView 2" />
+
+    <TextView
+        style="@style/body"
+        android:id="@+id/modify"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:text="TextView 3" />
+
+    <TextView
+        style="@style/body"
+        android:id="@+id/deadline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:text="TextView 4" />
+</LinearLayout>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MotionScene xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <Transition
+        app:constraintSetEnd="@+id/collapsed"
+        app:constraintSetStart="@id/expanded"
+        >
+        <KeyFrameSet >
+            <KeyAttribute
+                app:motionTarget="@+id/subtitle"
+                app:framePosition="55"
+                android:alpha="0"/>
+        </KeyFrameSet>
+    </Transition>
+
+    <!-- Start constraint set uses expanded_bottom and parent as bottom and top bounds -->
+    <ConstraintSet android:id="@+id/expanded">
+        <Constraint
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="72dp"
+            android:layout_marginTop="48dp"
+            android:scaleX="1.0"
+            android:scaleY="1.0"/>
+
+        <Constraint
+            android:id="@+id/subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/title"
+            app:layout_constraintStart_toStartOf="@id/title"
+            android:layout_marginTop="4dp"
+            android:visibility="visible"
+            android:alpha="1"/>
+
+        <Constraint
+            android:id="@+id/show_rdy_icon"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            app:layout_constraintTop_toTopOf="@id/subtitle"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/subtitle"
+            android:layout_marginEnd="28dp"/>
+
+        <Constraint
+            android:id="@id/systembar_overlay"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+
+            android:alpha="0.0"/>
+
+    </ConstraintSet>
+
+    <!-- end constraint set uses collapsed_top and parent as top and bottom, with inset as
+         guideline -->
+    <ConstraintSet android:id="@+id/collapsed" >
+        <Constraint
+            android:id="@+id/title"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            app:layout_constraintTop_toTopOf="@id/collapsed_top"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:scaleX=".625"
+            android:scaleY=".625"/>
+
+        <Constraint
+            android:id="@+id/subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="parent"
+            android:layout_marginStart="0dp"
+            android:layout_marginBottom="0dp"
+            android:layout_marginTop="0dp"
+            android:visibility="invisible"
+            android:alpha="0"/>
+        <Constraint
+            android:id="@+id/show_rdy_icon"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            app:layout_constraintTop_toTopOf="@id/title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/title"
+            android:layout_marginEnd="20dp"/>
+
+        <Constraint
+            android:id="@id/systembar_overlay"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:alpha="1.0"/>
+    </ConstraintSet>
+</MotionScene>

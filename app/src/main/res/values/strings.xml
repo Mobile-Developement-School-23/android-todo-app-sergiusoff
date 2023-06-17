@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">ToDoApp</string>
+    <string name="my_todos">Мои дела</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="task_info_btn">Task information</string>
+    <string name="priority_prompt">Select Priority</string>
+    <string name="to_list_frag_desc">Back to todos list</string>
+    <string name="rdy_count">Выполнено — %1$s/%2$s</string>
+    <string name="item_text_text">Полный текст дела:</string>
+    <string name="item_imp">Важность дела: %1$s</string>
+    <string name="date_create">Создано: %1$s</string>
+    <string name="date_modify">Изменено: %1$s</string>
+    <string name="deadline">Дедлайн: %1$s</string>
+    <string name="deadline_no">не установлено</string>
+    <string name="date_modify_no">не установлено</string>
+    <string-array name="priority_array">
+        <item>Нет</item>
+        <item>Низкий</item>
+        <item>!! Высокий</item>
+    </string-array>
+
+</resources>
