@@ -102,18 +102,22 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
             popupWindowMenu.isFocusable = true
             // Обработка действий контекстного меню
             binding.buttonActivate.setOnClickListener {
+                popupWindowMenu.dismiss()
                 checkItem(ind)
             }
 
             binding.buttonEdit.setOnClickListener {
+                popupWindowMenu.dismiss()
                 adapterListener?.onEditClicked(adapterPosition)
             }
 
             binding.buttonDetails.setOnClickListener {
+                popupWindowMenu.dismiss()
                 showInfo(ind, view)
             }
 
             binding.buttonDelete.setOnClickListener {
+                popupWindowMenu.dismiss()
                 deleteItem(ind)
             }
             // Отображаем PopupWindow рядом с представлением элемента списка
