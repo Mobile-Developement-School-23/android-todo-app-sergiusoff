@@ -5,12 +5,15 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.ViewModelProvider
 import com.example.todoapp.App
 import com.example.todoapp.R
 import com.example.todoapp.databinding.FragmentCreateEditBinding
 import com.example.todoapp.model.Importance
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.utils.navigator
+import com.example.todoapp.viewmodel.CreateEditViewModel
+import com.example.todoapp.viewmodel.TodoListViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
 import java.text.SimpleDateFormat
 import java.util.*
@@ -27,6 +30,7 @@ class CreateEditFragment : Fragment() {
     private var _binding: FragmentCreateEditBinding? = null
     // свойство-делегат, которое обеспечивает доступ к привязке фрагмента
     private val binding get() = _binding!!
+    private lateinit var createEditViewModel: CreateEditViewModel
 
 
     // Целочисленное значение, переданное через аргументы фрагмента (см. onCreate()) необходимое для проверки новый/старый объект дела.
@@ -73,8 +77,10 @@ class CreateEditFragment : Fragment() {
         _binding = FragmentCreateEditBinding.inflate(inflater, container, false)
         val view = binding.root
         creationDate = Date()
+        createEditViewModel = ViewModelProvider(this)[CreateEditViewModel::class.java]
         if (myInt >= 0){
-            val todoItem = App.todoItemsRepository.getTodoItem(myInt)
+            createEditViewModel.loadTodoItem(myInt)
+            val todoItem = createEditViewModel.todoItem.value!!
             binding.editTextDescription.editText?.setText(todoItem.text)
             binding.spinnerPriority.setSelection(todoItem.importance.ordinal)
             if (todoItem.deadline != null){
@@ -100,14 +106,15 @@ class CreateEditFragment : Fragment() {
             // Проверка, новый объект или нет и запись даты изменения если старый
             val modify = if (myInt < 0) null else Date()
             // Сохранение элемента с использованием метода навигатора
-            navigator().saveTodoItems(TodoItem("$myInt", description, imp, deadlineDate, false, creationDate, modify))
+            createEditViewModel.saveTodoItem(TodoItem("$myInt", description, imp, deadlineDate, false, creationDate, modify))
+//            navigator().saveTodoItems(TodoItem("$myInt", description, imp, deadlineDate, false, creationDate, modify))
             onCancelPressed()
         }
 
         // Удаление элемента с использованием метода навигатора (сразу возварщение)
         binding.buttonDelete.setOnClickListener {
             if (myInt >= 0){
-                App.todoItemsRepository.deleteTodoItemByInd(myInt)
+                createEditViewModel.deleteTodoItem()
                 onCancelPressed()
             }
         }

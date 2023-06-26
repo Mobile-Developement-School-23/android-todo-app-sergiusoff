@@ -19,9 +19,10 @@ class TodoListViewModel : ViewModel() {
      * Загружает список задач.
      */
     fun loadTodoItems(){
-        todoItemsRepository.getTodoItems()
-            .onEach { _todoItems.value = it }
-            .launchIn(viewModelScope)
+        viewModelScope.launch {
+            todoItemsRepository.getTodoItems()
+                .onEach { _todoItems.value = it }
+                .launchIn(viewModelScope) }
     }
 
     /**

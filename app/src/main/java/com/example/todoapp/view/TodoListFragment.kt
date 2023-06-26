@@ -1,11 +1,7 @@
 package com.example.todoapp.view
 
-import android.os.Build
 import android.os.Bundle
 import android.view.*
-import androidx.core.content.res.ResourcesCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
