@@ -59,12 +59,4 @@ class MainActivity : AppCompatActivity(), Navigator {
         findViewById<FloatingActionButton>(R.id.floatingActionButton).show()
         supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
     }
-
-    /**
-     * Сохраняет элемент списка дел.
-     * @param todoItem Элемент списка дел.
-     */
-    override fun saveTodoItems(todoItem: TodoItem) {
-        App.todoItemsRepository.addTodoItem(todoItem)
-    }
 }

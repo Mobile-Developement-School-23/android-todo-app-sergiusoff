@@ -24,9 +24,4 @@ interface Navigator {
      * Отображает список задач.
      */
     fun showList()
-    /**
-     * Сохраняет задачу.
-     * @param todoItem Задача для сохранения.
-     */
-    fun saveTodoItems(todoItem: TodoItem)
 }

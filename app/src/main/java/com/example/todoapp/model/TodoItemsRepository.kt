@@ -1,5 +1,10 @@
 package com.example.todoapp.model
 
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Update
+import com.example.todoapp.model.database.TodoItemsDatabase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.*
@@ -10,7 +15,20 @@ import java.util.*
  * @property todoItems Список задач.
  * @property todoItemsFlow Поток, содержащий список задач.
  */
-class TodoItemsRepository {
+class TodoItemsRepository(
+    private val db: TodoItemsDatabase
+) {
+
+    private val dao get() = db.itemsDao
+
+    fun getAll(): Flow<List<TodoItem>> = dao.getAll()
+
+    suspend fun add(item: TodoItem) = dao.add(item)
+
+    suspend fun update(item: TodoItem) = dao.update(item)
+
+    suspend fun delete(item: TodoItem) = dao.delete(item)
+
     private val todoItems = mutableListOf<TodoItem>()
     private val todoItemsFlow = MutableStateFlow(todoItems)
 
@@ -85,7 +103,7 @@ class TodoItemsRepository {
             todoItems[todoItem.id.toInt()] = todoItem
         }
         // Обновляем значение потока (дальше также)
-        todoItemsFlow.value = todoItems.toMutableList()
+//        todoItemsFlow.value = todoItems.toMutableList()
     }
 
 
@@ -96,7 +114,7 @@ class TodoItemsRepository {
      */
     fun deleteTodoItem(item: TodoItem) {
         todoItems.remove(item)
-        todoItemsFlow.value = todoItems.toMutableList()
+//        todoItemsFlow.value = todoItems.toMutableList()
     }
 
     /**
@@ -107,7 +125,7 @@ class TodoItemsRepository {
     fun checkTodoItem(position: Int) {
         // Инвертируем флаг выполнения задачи
         todoItems[position].isDone = !todoItems[position].isDone
-        todoItemsFlow.value = todoItems.toMutableList()
+//        todoItemsFlow.value = todoItems.toMutableList()
     }
 
     /**
@@ -127,7 +145,7 @@ class TodoItemsRepository {
      */
     fun deleteTodoItemByInd(ind: Int) {
         todoItems.removeAt(ind)
-        todoItemsFlow.value = todoItems.toMutableList()
+//        todoItemsFlow.value = todoItems.toMutableList()
     }
 
     /**

@@ -3,7 +3,9 @@ package com.example.todoapp.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.todoapp.App
+import com.example.todoapp.locateLazy
 import com.example.todoapp.model.TodoItem
+import com.example.todoapp.model.TodoItemsRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -11,7 +13,7 @@ import kotlinx.coroutines.launch
  * ViewModel, отвечающая за управление списком задач.
  */
 class TodoListViewModel : ViewModel() {
-    private val todoItemsRepository = App.todoItemsRepository
+    private val todoItemsRepository: TodoItemsRepository by locateLazy()
     private val _todoItems = MutableStateFlow(emptyList<TodoItem>())
     val todoItems: Flow<List<TodoItem>> get() = _todoItems
 
