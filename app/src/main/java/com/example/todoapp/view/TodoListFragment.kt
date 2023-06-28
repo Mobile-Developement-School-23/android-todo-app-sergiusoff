@@ -1,6 +1,7 @@
 package com.example.todoapp.view
 
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -65,24 +66,23 @@ class TodoListFragment : Fragment(), AdapterListener {
         // Получение экземпляра ViewModel для управления списком задач
         todoListViewModel = ViewModelProvider(this)[TodoListViewModel::class.java]
         // Запуск наблюдателя жизненного цикла фрагмента для отслеживания изменений в списке задач
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 todoListViewModel.todoItems.collect {
                     todoItemAdapter.updateItems(it)
+                    it.forEach { Log.d("KEEEEEEEEK", "${it.id}") }
+                    binding.subtitle.text = getString(R.string.rdy_count)
+                        .format(it.count { item -> item.isDone }, it.size)
                 }
             }
         }
-        // Загрузка списка задач
-        todoListViewModel.loadTodoItems()
 
         // Настройка слушателя изменения состояния панели приложения
         binding.appbarLayout.addOnOffsetChangedListener { appBar, offset ->
             val seekPosition = -offset / appBar.totalScrollRange.toFloat()
             binding.motionLayout.progress = seekPosition
         }
-        // Установка текста подзаголовка с количеством выполненных задач
-        binding.subtitle.text = getString(R.string.rdy_count)
-            .format(todoListViewModel.getCheckedItemCount(), todoListViewModel.getTodosCount())
 
         // понятия не имею что тут нужно
         binding.showRdyIcon.setOnClickListener {
@@ -96,26 +96,21 @@ class TodoListFragment : Fragment(), AdapterListener {
      */
     override fun onTodoItemDeleted(item: TodoItem) {
         todoListViewModel.deleteTodoItem(item)
-        binding.subtitle.text = getString(R.string.rdy_count)
-            .format(todoListViewModel.getCheckedItemCount(), todoListViewModel.getTodosCount())
     }
 
     /**
      * Вызывается при отметке задачи.
      * @param position Позиция отмеченной задачи.
      */
-    override fun onTodoItemChecked(position: Int) {
-        todoListViewModel.checkTodoItem(position)
-        binding.subtitle.text = getString(R.string.rdy_count)
-            .format(todoListViewModel.getCheckedItemCount(), todoListViewModel.getTodosCount())
-
+    override fun onTodoItemChecked(item: TodoItem) {
+        todoListViewModel.updateTodoItem(item)
     }
 
     /**
      * Вызывается при нажатии на кнопку редактирования.
      * @param position Позиция задачи для редактирования.
      */
-    override fun onEditClicked(position: Int) {
-        navigator().showDetails(position)
+    override fun onEditClicked(todoItem: TodoItem) {
+        navigator().showDetails(todoItem)
     }
 }

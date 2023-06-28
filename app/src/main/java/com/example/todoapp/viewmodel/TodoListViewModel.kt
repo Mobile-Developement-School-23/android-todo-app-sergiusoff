@@ -2,68 +2,29 @@ package com.example.todoapp.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.todoapp.App
 import com.example.todoapp.locateLazy
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.model.TodoItemsRepository
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * ViewModel, отвечающая за управление списком задач.
  */
 class TodoListViewModel : ViewModel() {
     private val todoItemsRepository: TodoItemsRepository by locateLazy()
-    private val _todoItems = MutableStateFlow(emptyList<TodoItem>())
-    val todoItems: Flow<List<TodoItem>> get() = _todoItems
+    val todoItems = todoItemsRepository.getAll().asLiveDataFlow()
+    private fun <T> Flow<T>.asLiveDataFlow() = shareIn(viewModelScope, SharingStarted.Eagerly, replay = 1)
 
-    /**
-     * Загружает список задач.
-     */
-    fun loadTodoItems(){
-        viewModelScope.launch {
-            todoItemsRepository.getTodoItems()
-                .onEach { _todoItems.value = it }
-                .launchIn(viewModelScope) }
+    fun updateTodoItem(item: TodoItem) {
+        viewModelScope.launch { todoItemsRepository.update(item) }
     }
 
-    /**
-     * Добавляет задачу в список.
-     * @param todoItem Задача для добавления.
-     * @return Индекс добавленной задачи.
-     */
-    fun addTodoItem(todoItem: TodoItem): Int{
-        todoItemsRepository.addTodoItem(todoItem)
-        return 0
-    }
-
-    /**
-     * Возвращает количество отмеченных задач.
-     * @return Количество отмеченных задач.
-     */
-    fun getCheckedItemCount(): Int{
-        return todoItemsRepository.getCheckedItemCount()
-    }
-
-    /**
-     * Удаляет задачу из списка.
-     * @param item Задача для удаления.
-     */
     fun deleteTodoItem(item: TodoItem) {
-        todoItemsRepository.deleteTodoItem(item)
+        viewModelScope.launch { todoItemsRepository.delete(item) }
     }
-
-    /**
-     * Отмечает задачу как выполненную.
-     * @param position Позиция задачи в списке.
-     */
-    fun checkTodoItem(position: Int) {
-        todoItemsRepository.checkTodoItem(position)
-    }
-
-    /**
-     * Возвращает общее количество задач.
-     * @return Общее количество задач.
-     */
-    fun getTodosCount(): Int = todoItemsRepository.getTodosCount()
 }

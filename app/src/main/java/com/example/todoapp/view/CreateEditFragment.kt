@@ -1,19 +1,18 @@
 package com.example.todoapp.view
 
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
-import com.example.todoapp.App
-import com.example.todoapp.R
 import com.example.todoapp.databinding.FragmentCreateEditBinding
 import com.example.todoapp.model.Importance
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.utils.navigator
 import com.example.todoapp.viewmodel.CreateEditViewModel
-import com.example.todoapp.viewmodel.TodoListViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
 import java.text.SimpleDateFormat
 import java.util.*
@@ -34,25 +33,25 @@ class CreateEditFragment : Fragment() {
 
 
     // Целочисленное значение, переданное через аргументы фрагмента (см. onCreate()) необходимое для проверки новый/старый объект дела.
-    private var myInt: Int = -1
+    private var tempItem: TodoItem? = null
     private val myDateFormat = SimpleDateFormat("dd MMM YYYY", Locale.getDefault()).apply {
         timeZone = TimeZone.getTimeZone("UTC")
     }
     private var deadlineDate: Date? = null
     private lateinit var creationDate: Date
     companion object {
-        private const val ARG_MY_INT = "arg_my_int"
+        private const val ARG_MY_ITEM = "arg_my_int"
 
         /**
-         * Создает новый экземпляр [CreateEditFragment] с указанным целочисленным параметром.
+         * Создает новый экземпляр [CreateEditFragment] с указанным TodoItem параметром.
          *
-         * @param myInt Целочисленный параметр.
+         * @param todoItem TodoItem параметр.
          * @return Новый экземпляр [CreateEditFragment].
          */
-        fun newInstance(myInt: Int): CreateEditFragment {
+        fun newInstance(todoItem: TodoItem?): CreateEditFragment {
             val fragment = CreateEditFragment()
             val args = Bundle()
-            args.putInt(ARG_MY_INT, myInt)
+            args.putSerializable(ARG_MY_ITEM, todoItem)
             fragment.arguments = args
             return fragment
         }
@@ -61,7 +60,11 @@ class CreateEditFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            myInt = it.getInt(ARG_MY_INT, -1)
+            tempItem = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                it.getSerializable(ARG_MY_ITEM, TodoItem::class.java)
+            } else {
+                it.getSerializable(ARG_MY_ITEM) as TodoItem?
+            }
         }
     }
 
@@ -78,16 +81,16 @@ class CreateEditFragment : Fragment() {
         val view = binding.root
         creationDate = Date()
         createEditViewModel = ViewModelProvider(this)[CreateEditViewModel::class.java]
-        if (myInt >= 0){
-            createEditViewModel.loadTodoItem(myInt)
-            val todoItem = createEditViewModel.todoItem.value!!
-            binding.editTextDescription.editText?.setText(todoItem.text)
-            binding.spinnerPriority.setSelection(todoItem.importance.ordinal)
-            if (todoItem.deadline != null){
+        val item = tempItem
+        if (item != null){
+            Log.d("KEEEEEEEEK", "$item")
+            binding.editTextDescription.editText?.setText(item.text)
+            binding.spinnerPriority.setSelection(item.importance.ordinal)
+            if (item.deadline != null){
                 binding.switchCalendar.isChecked = true
-                binding.dateText.text = myDateFormat.format(todoItem.deadline)
+                binding.dateText.text = myDateFormat.format(item.deadline)
             }
-            creationDate = todoItem.creationDate
+            creationDate = item.creationDate
         }
         binding.close.setOnClickListener {
             onCancelPressed()
@@ -104,17 +107,18 @@ class CreateEditFragment : Fragment() {
                  else -> Importance.LOW
             }
             // Проверка, новый объект или нет и запись даты изменения если старый
-            val modify = if (myInt < 0) null else Date()
-            // Сохранение элемента с использованием метода навигатора
-            createEditViewModel.saveTodoItem(TodoItem("$myInt", description, imp, deadlineDate, false, creationDate, modify))
-//            navigator().saveTodoItems(TodoItem("$myInt", description, imp, deadlineDate, false, creationDate, modify))
+            val modify = if (item == null) null else Date()
+            if (item == null)
+                createEditViewModel.saveTodoItem(TodoItem(UUID.randomUUID(), description, imp, deadlineDate, false, creationDate, modify))
+            else
+                createEditViewModel.updateTodoItem(TodoItem(item.id, description, imp, deadlineDate, false, creationDate, modify))
             onCancelPressed()
         }
 
         // Удаление элемента с использованием метода навигатора (сразу возварщение)
         binding.buttonDelete.setOnClickListener {
-            if (myInt >= 0){
-                createEditViewModel.deleteTodoItem()
+            if (item != null){
+                createEditViewModel.deleteTodoItem(item)
                 onCancelPressed()
             }
         }

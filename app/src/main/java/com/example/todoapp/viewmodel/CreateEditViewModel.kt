@@ -11,32 +11,21 @@ import com.example.todoapp.model.TodoItemsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class CreateEditViewModel : ViewModel() {
     private val _todoItem = MutableStateFlow<TodoItem?>(null)
-    val todoItem: StateFlow<TodoItem?> get() = _todoItem
     private val repository: TodoItemsRepository by locateLazy()
 
-    fun loadTodoItem(myInt: Int) {
-        viewModelScope.launch {
-            val todoItem = repository.getTodoItem(myInt)
-            _todoItem.value = todoItem
-        }
-    }
-
     fun saveTodoItem(todoItem: TodoItem) {
-        viewModelScope.launch {
-            repository.addTodoItem(todoItem)
-        }
+        viewModelScope.launch { repository.add(todoItem) }
     }
 
-    fun deleteTodoItem() {
-        val currentItem = _todoItem.value
-        if (currentItem != null) {
-            viewModelScope.launch {
-                repository.deleteTodoItem(currentItem)
-                _todoItem.value = null
-            }
-        }
+    fun updateTodoItem(todoItem: TodoItem) {
+        viewModelScope.launch { repository.update(todoItem) }
+    }
+
+    fun deleteTodoItem(todoItem: TodoItem) {
+        viewModelScope.launch { repository.delete(todoItem) }
     }
 }

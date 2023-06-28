@@ -18,11 +18,11 @@ interface AdapterListener {
      * Вызывается при изменении состояния флажка элемента списка.
      * @param position Позиция элемента списка.
      */
-    fun onTodoItemChecked(position: Int)
+    fun onTodoItemChecked(item: TodoItem)
 
     /**
      * Вызывается при нажатии на кнопку редактирования элемента списка.
      * @param position Позиция элемента списка.
      */
-    fun onEditClicked(position: Int)
+    fun onEditClicked(todoItem: TodoItem)
 }

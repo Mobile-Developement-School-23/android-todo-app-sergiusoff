@@ -27,46 +27,12 @@ class TodoItemsRepository(
 
     suspend fun update(item: TodoItem) = dao.update(item)
 
+    suspend fun getTodoItem(myUUID: UUID): TodoItem = dao.get(myUUID)
+
     suspend fun delete(item: TodoItem) = dao.delete(item)
 
     private val todoItems = mutableListOf<TodoItem>()
     private val todoItemsFlow = MutableStateFlow(todoItems)
-
-    /**
-     * Инициализирует репозиторий TodoItemsRepository.
-     */
-    init {
-        // Добавление нескольких элементов TodoItem в список при инициализации объекта
-        // для примера и тестирования функциональности.
-        addTodoItem(TodoItem("-1", "1тест", Importance.NORMAL, Date(115, 12, 15), false, Date(115, 12, 12), Date(117, 12, 31)))
-        addTodoItem(TodoItem("-1", "2тесттесттесттесттесттесттест", Importance.LOW, null, true, Date(118, 1, 1), null))
-        addTodoItem(TodoItem("-1", "3тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.HIGH, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "4тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.NORMAL, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "5тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.LOW, Date(118, 12, 31), false, Date(2017, 12, 31), null))
-        addTodoItem(TodoItem("-1", "6тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.HIGH, null, false, Date(117, 12, 31), Date(118, 12, 31)))
-        addTodoItem(TodoItem("-1", "7тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.NORMAL, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "8тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.LOW, Date(118, 12, 31), false, Date(2017, 12, 31), null))
-        addTodoItem(TodoItem("-1", "9тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.HIGH, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "10тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.NORMAL, null, false, Date(117, 12, 31), Date(118, 12, 31)))
-        addTodoItem(TodoItem("-1", "11тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.LOW, Date(118, 12, 31), false, Date(2017, 12, 31), null))
-        addTodoItem(TodoItem("-1", "12тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.HIGH, Date(118, 12, 31), false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "13тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.NORMAL, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "14тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.LOW, Date(118, 12, 31), false, Date(2017, 12, 31), null))
-        addTodoItem(TodoItem("-1", "15тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.HIGH, Date(118, 12, 31), false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "16тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.HIGH, Date(118, 12, 31), false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "17sf", Importance.HIGH, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "18тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.HIGH, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "", Importance.HIGH, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "20fs", Importance.LOW, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "21fs", Importance.NORMAL, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "22fs", Importance.HIGH, Date(118, 12, 31), false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "23fs", Importance.LOW, Date(118, 12, 31), false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "24fs", Importance.NORMAL, Date(118, 12, 31), false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "25fs", Importance.HIGH, Date(118, 12, 31), false, Date(117, 12, 31), Date(118, 12, 31)))
-        addTodoItem(TodoItem("-1", "26fs", Importance.HIGH, null, false, Date(117, 12, 31), Date(118, 12, 31)))
-        addTodoItem(TodoItem("-1", "1тест", Importance.NORMAL, null, true, Date(117, 12, 12), null))
-        addTodoItem(TodoItem("-1", "2тесттесттесттесттесттесттест", Importance.LOW, null, false, Date(117, 1, 1), null))
-    }
 
     /**
      * Возвращает поток, содержащий список задач.
@@ -83,28 +49,6 @@ class TodoItemsRepository(
      * @param position Позиция элемента в списке задач.
      * @return Элемент TodoItem.
      */
-    fun getTodoItem(position: Int): TodoItem{
-        return todoItems[position]
-    }
-
-    /**
-     * Добавляет новый элемент TodoItem в список задач или обновляет существующий элемент с указанным ID.
-     *
-     * @param todoItem Элемент TodoItem для добавления или обновления.
-     */
-    fun addTodoItem(todoItem: TodoItem) {
-        // Если у задачи нет ID ("-1"), генерируем и присваиваем ей новый ID
-        if (todoItem.id == "-1") {
-            todoItem.id = todoItems.size.toString()
-            todoItems.add(todoItem)
-        }
-        else {
-            // Если у задачи уже есть ID, обновляем задачу в списке по соответствующему ID
-            todoItems[todoItem.id.toInt()] = todoItem
-        }
-        // Обновляем значение потока (дальше также)
-//        todoItemsFlow.value = todoItems.toMutableList()
-    }
 
 
     /**

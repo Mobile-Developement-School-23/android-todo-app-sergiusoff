@@ -2,6 +2,7 @@ package com.example.todoapp.model.database
 
 import androidx.room.TypeConverter
 import java.util.Date
+import java.util.UUID
 
 class Converters {
     @TypeConverter
@@ -12,5 +13,15 @@ class Converters {
     @TypeConverter
     fun dateToTimestamp(date: Date?): Long? {
         return date?.time
+    }
+
+    @TypeConverter
+    fun fromString(value: String?): UUID? {
+        return if (value != null) UUID.fromString(value) else null
+    }
+
+    @TypeConverter
+    fun toString(uuid: UUID?): String? {
+        return uuid?.toString()
     }
 }

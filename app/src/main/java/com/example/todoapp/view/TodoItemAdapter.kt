@@ -108,7 +108,7 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
 
             binding.buttonEdit.setOnClickListener {
                 popupWindowMenu.dismiss()
-                adapterListener?.onEditClicked(adapterPosition)
+                adapterListener?.onEditClicked(todoItems[ind])
             }
 
             binding.buttonDetails.setOnClickListener {
@@ -168,7 +168,7 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
             }
             binding.taskReadyFlag.setOnClickListener{ checkItem(adapterPosition) }
             binding.info.setOnClickListener { showInfo(adapterPosition, binding.info) }
-            binding.root.setOnClickListener { adapterListener?.onEditClicked(adapterPosition) }
+            binding.root.setOnClickListener { adapterListener?.onEditClicked(todoItem) }
             binding.root.setOnLongClickListener { showMenu(adapterPosition, binding.info)
                 true }
         }
@@ -233,7 +233,8 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
      * @param position Позиция элемента, который должен быть отмечен.
      */
     private fun checkItem(position: Int) {
-        adapterListener?.onTodoItemChecked(position)
+        todoItems[position].isDone = !todoItems[position].isDone
+        adapterListener?.onTodoItemChecked(todoItems[position])
         notifyItemChanged(position)
     }
 }
