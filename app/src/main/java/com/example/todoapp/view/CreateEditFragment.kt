@@ -102,12 +102,12 @@ class CreateEditFragment : Fragment() {
             val description = binding.editTextDescription.editText?.text.toString()
             val priority = binding.spinnerPriority.selectedItem.toString()
             val imp = when (priority){
-                 "!! Высокий" -> Importance.HIGH
-                 "Низкий"-> Importance.NORMAL
+                 "!! Высокий" -> Importance.IMPORTANT
+                 "Низкий"-> Importance.BASIC
                  else -> Importance.LOW
             }
             // Проверка, новый объект или нет и запись даты изменения если старый
-            val modify = if (item == null) null else Date()
+            val modify = Date()
             if (item == null)
                 createEditViewModel.saveTodoItem(TodoItem(UUID.randomUUID(), description, imp, deadlineDate, false, creationDate, modify))
             else

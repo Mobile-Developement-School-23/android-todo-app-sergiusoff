@@ -15,6 +15,7 @@ import com.example.todoapp.databinding.FragmentTodoListBinding
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.utils.navigator
 import com.example.todoapp.viewmodel.TodoListViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -24,7 +25,7 @@ class TodoListFragment : Fragment(), AdapterListener {
     private lateinit var todoListViewModel: TodoListViewModel
     private lateinit var binding: FragmentTodoListBinding
     private lateinit var todoItemAdapter: TodoItemAdapter
-    private var hideReady = false
+    private var job: Job? = null
 
     /**
      * Создает и возвращает представление фрагмента.
@@ -67,11 +68,10 @@ class TodoListFragment : Fragment(), AdapterListener {
         todoListViewModel = ViewModelProvider(this)[TodoListViewModel::class.java]
         // Запуск наблюдателя жизненного цикла фрагмента для отслеживания изменений в списке задач
 
-        viewLifecycleOwner.lifecycleScope.launch {
+        job = viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 todoListViewModel.todoItems.collect {
                     todoItemAdapter.updateItems(it)
-                    it.forEach { Log.d("KEEEEEEEEK", "${it.id}") }
                     binding.subtitle.text = getString(R.string.rdy_count)
                         .format(it.count { item -> item.isDone }, it.size)
                 }
@@ -112,5 +112,10 @@ class TodoListFragment : Fragment(), AdapterListener {
      */
     override fun onEditClicked(todoItem: TodoItem) {
         navigator().showDetails(todoItem)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        job?.cancel()
     }
 }

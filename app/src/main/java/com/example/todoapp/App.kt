@@ -3,7 +3,7 @@ package com.example.todoapp
 import android.app.Application
 import android.content.Context
 import com.example.todoapp.model.TodoItemsRepository
-import com.example.todoapp.model.database.TodoItemsDatabase
+import com.example.todoapp.database.TodoItemsDatabase
 import kotlin.reflect.KClass
 
 /**

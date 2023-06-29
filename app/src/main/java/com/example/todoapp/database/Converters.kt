@@ -1,4 +1,4 @@
-package com.example.todoapp.model.database
+package com.example.todoapp.database
 
 import androidx.room.TypeConverter
 import java.util.Date

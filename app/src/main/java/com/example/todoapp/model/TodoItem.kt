@@ -14,5 +14,5 @@ data class TodoItem(
     var deadline: Date?,
     var isDone: Boolean,
     var creationDate: Date,
-    var lastModificationDate: Date?
+    var lastModificationDate: Date
 ): Serializable

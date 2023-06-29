@@ -6,11 +6,9 @@ import com.example.todoapp.locateLazy
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.model.TodoItemsRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * ViewModel, отвечающая за управление списком задач.

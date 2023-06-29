@@ -66,11 +66,7 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
             binding.importance.text = context.getString(R.string.item_imp).format(item.importance.name)
             binding.create.text = context.getString(R.string.date_create).format(dateFormat.format(item.creationDate))
 
-            val modifyText = if (item.lastModificationDate != null) {
-                context.getString(R.string.date_modify).format(dateFormat.format(item.lastModificationDate!!))
-            } else {
-                context.getString(R.string.date_modify).format(context.getString(R.string.date_modify_no))
-            }
+            val modifyText = context.getString(R.string.date_modify).format(dateFormat.format(item.lastModificationDate))
             binding.modify.text = modifyText
 
             val deadlineText = if (item.deadline != null) {
@@ -150,13 +146,13 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
                 binding.taskReadyFlag.setImageDrawable(uncheckedImage)
                 binding.todoItemText.paintFlags = binding.todoItemText.paintFlags and STRIKE_THRU_TEXT_FLAG.inv()
                 binding.taskImportance.clearColorFilter()
-                if (!todoItem.isDone && todoItem.importance == Importance.HIGH){
+                if (!todoItem.isDone && todoItem.importance == Importance.IMPORTANT){
                     binding.taskReadyFlag.setImageDrawable(uncheckedHighImage)
                     binding.taskImportance.setColorFilter(ContextCompat.getColor(context, R.color.red))
                 }
             }
             when (todoItem.importance){
-                Importance.HIGH -> {
+                Importance.IMPORTANT -> {
                     binding.taskImportance.visibility = View.VISIBLE
                     binding.taskImportance.setImageDrawable(doubleExclamation)
                 }
