@@ -1,8 +1,9 @@
 package com.example.todoapp.view
 
 import android.os.Bundle
-import android.util.Log
 import android.view.*
+import android.widget.Toast
+
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
@@ -86,6 +87,7 @@ class TodoListFragment : Fragment(), AdapterListener {
 
         // понятия не имею что тут нужно
         binding.showRdyIcon.setOnClickListener {
+//            todoListViewModel.checkRetrofitWork()
 
         }
     }

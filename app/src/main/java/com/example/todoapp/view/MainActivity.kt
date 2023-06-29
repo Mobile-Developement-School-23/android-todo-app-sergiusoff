@@ -10,7 +10,7 @@ import androidx.fragment.app.FragmentManager
 import com.example.todoapp.R
 import com.example.todoapp.model.Importance
 import com.example.todoapp.model.TodoItem
-import com.example.todoapp.retrofit.ApiResponse
+import com.example.todoapp.retrofit.ApiEntity
 import com.example.todoapp.retrofit.ApiResponseSerializer
 import com.example.todoapp.retrofit.TodoItemSerializer
 import com.example.todoapp.utils.Navigator
@@ -29,14 +29,14 @@ class MainActivity : AppCompatActivity(), Navigator {
 
         val gson = GsonBuilder()
             .registerTypeAdapter(TodoItem::class.java, TodoItemSerializer())
-            .registerTypeAdapter(ApiResponse::class.java, ApiResponseSerializer())
+            .registerTypeAdapter(ApiEntity::class.java, ApiResponseSerializer())
             .setPrettyPrinting()
             .create()
 
         val json = gson.toJson(createApiResponse())
         Log.d("MainActivity", "Serialized JSON:\n$json")
 
-        val deserializedApi = gson.fromJson(json, ApiResponse::class.java) // Десериализация JSON строки в объект TodoItem
+        val deserializedApi = gson.fromJson(json, ApiEntity::class.java) // Десериализация JSON строки в объект TodoItem
         Log.d("MainActivity", "Deserialized JSON:\n$deserializedApi")
 
         // Настройка цвета системной панели
@@ -92,10 +92,10 @@ class MainActivity : AppCompatActivity(), Navigator {
         return TodoItem(id, text, importance, deadline, isDone, creationDate, lastModificationDate)
     }
 
-    private fun createApiResponse(): ApiResponse {
+    private fun createApiResponse(): ApiEntity {
         val status = "ok"
         val element = createTodoItem()
         val revision = 1
-        return ApiResponse(status, element, revision)
+        return ApiEntity(status, null, listOf(element), revision)
     }
 }

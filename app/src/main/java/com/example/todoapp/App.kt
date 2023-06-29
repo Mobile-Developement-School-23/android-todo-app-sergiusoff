@@ -4,6 +4,15 @@ import android.app.Application
 import android.content.Context
 import com.example.todoapp.model.TodoItemsRepository
 import com.example.todoapp.database.TodoItemsDatabase
+import com.example.todoapp.model.TodoItem
+import com.example.todoapp.retrofit.ApiEntity
+import com.example.todoapp.retrofit.ApiResponseSerializer
+import com.example.todoapp.retrofit.TodoItemSerializer
+import com.example.todoapp.retrofit.TodoItemsApiService
+import com.google.gson.GsonBuilder
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import kotlin.reflect.KClass
 
 /**
@@ -18,7 +27,26 @@ class App : Application() {
         super.onCreate()
         ServiceLocator.register<Context>(this)
         ServiceLocator.register(TodoItemsDatabase.create(locate()))
-        ServiceLocator.register(TodoItemsRepository(locate()))
+
+        val todoItemsApiService = Retrofit.Builder()
+            .baseUrl("https://beta.mrdekk.ru/todobackend/")
+            .addConverterFactory(GsonConverterFactory.create(
+                GsonBuilder()
+                .registerTypeAdapter(TodoItem::class.java, TodoItemSerializer())
+                .registerTypeAdapter(ApiEntity::class.java, ApiResponseSerializer())
+                .create()))
+            .client(OkHttpClient.Builder().addInterceptor { chain ->
+                val originalRequest = chain.request()
+                val modifiedRequest = originalRequest.newBuilder()
+                    .header("Authorization", "Bearer agouara")
+                    .build()
+                chain.proceed(modifiedRequest)
+            }.build())
+            .build()
+            .create(TodoItemsApiService::class.java)
+
+        ServiceLocator.register(todoItemsApiService)
+        ServiceLocator.register(TodoItemsRepository(locate(), locate()))
     }
 }
 
