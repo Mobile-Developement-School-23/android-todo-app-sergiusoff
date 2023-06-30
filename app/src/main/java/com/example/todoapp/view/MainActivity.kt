@@ -5,34 +5,23 @@ import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.Window
 import android.view.WindowManager
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.ViewModelProvider
 import com.example.todoapp.R
 import com.example.todoapp.databinding.ActivityMainBinding
-import com.example.todoapp.databinding.FragmentTodoListBinding
-import com.example.todoapp.model.Importance
 import com.example.todoapp.model.TodoItem
-import com.example.todoapp.retrofit.ApiEntity
-import com.example.todoapp.retrofit.ApiResponseSerializer
+import com.example.todoapp.model.UpdateDataWorker
 import com.example.todoapp.retrofit.NetworkSchedulerService
-import com.example.todoapp.retrofit.TodoItemSerializer
 import com.example.todoapp.utils.Navigator
 import com.example.todoapp.viewmodel.SharedViewModel
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
-import com.google.gson.GsonBuilder
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import java.lang.Exception
-import java.util.Date
-import java.util.UUID
 
 /**
  * Основная активность приложения, реализующая навигацию между фрагментами и операции с элементами списка дел.
@@ -40,35 +29,29 @@ import java.util.UUID
 class MainActivity : AppCompatActivity(), Navigator {
     private lateinit var sharedViewModel: SharedViewModel
     private lateinit var binding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Создание экземпляра привязки для разметки activity_main.xml
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Получение экземпляра SharedViewModel с использованием ViewModelProvider
         sharedViewModel = ViewModelProvider(this)[SharedViewModel::class.java]
-
-        val gson = GsonBuilder()
-            .registerTypeAdapter(TodoItem::class.java, TodoItemSerializer())
-            .registerTypeAdapter(ApiEntity::class.java, ApiResponseSerializer())
-            .setPrettyPrinting()
-            .create()
-
-        val json = gson.toJson(createApiResponse())
-        Log.d("MainActivity", "Serialized JSON:\n$json")
-
-        val deserializedApi = gson.fromJson(json, ApiEntity::class.java) // Десериализация JSON строки в объект TodoItem
-        Log.d("MainActivity", "Deserialized JSON:\n$deserializedApi")
 
         // Настройка цвета системной панели
         val window: Window = window
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         window.statusBarColor = ContextCompat.getColor(this, R.color.back_primary)
+
+        // Добавление фрагмента TodoListFragment при первом создании активности
         if (savedInstanceState == null) {
-            // Добавление фрагмента TodoListFragment при первом создании активности
             supportFragmentManager.beginTransaction()
                 .add(binding.container.id, TodoListFragment())
                 .commit()
         }
+
         // Обработка нажатия на плавающую кнопку "Добавить"
         binding.floatingActionButton.setOnClickListener {
             showDetails(null)
@@ -80,22 +63,28 @@ class MainActivity : AppCompatActivity(), Navigator {
             findViewById<FloatingActionButton>(R.id.floatingActionButton).hide()
         }
 
+        // Наблюдение за изменениями в LiveData todoItemProcess
         sharedViewModel.todoItemProcess.observe(this) { event ->
-            Log.d("MainActivityty", event.peekContent())
+            Log.d("MainActivity", event.peekContent())
+
+            // Получение и обработка события, если оно не было обработано ранее
             event.getContentIfNotHandled()?.let { result ->
                 Snackbar.make(binding.root, result, Snackbar.LENGTH_LONG).show()
             }
         }
 
+        // Запуск планировщика задач
         scheduleJob()
     }
 
     /**
      * Отображает фрагмент для создания/редактирования элемента списка дел.
-     * @param id Индекс элемента, который нужно редактировать (-1 для создания нового элемента).
+     * @param todoItem элемент, который нужно редактировать.
      */
     override fun showDetails(todoItem: TodoItem?) {
         binding.floatingActionButton.hide()
+
+        // Замена текущего фрагмента на CreateEditFragment для создания/редактирования элемента
         supportFragmentManager.beginTransaction()
             .replace(R.id.container, CreateEditFragment.newInstance(todoItem))
             .addToBackStack(null)
@@ -107,9 +96,14 @@ class MainActivity : AppCompatActivity(), Navigator {
      */
     override fun showList() {
         binding.floatingActionButton.show()
+
+        // Удаление фрагментов из back stack, чтобы показать список элементов
         supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
     }
 
+    /**
+     * Планирует выполнение задачи через JobScheduler.
+     */
     private fun scheduleJob() {
         val myJob = JobInfo.Builder(0, ComponentName(this, NetworkSchedulerService::class.java))
             .setRequiresCharging(true)
@@ -124,32 +118,17 @@ class MainActivity : AppCompatActivity(), Navigator {
     }
 
     override fun onStop() {
+        // Остановка службы NetworkSchedulerService при остановке активности
         stopService(Intent(this, NetworkSchedulerService::class.java))
         super.onStop()
     }
 
     override fun onStart() {
         super.onStart()
+
+        // Запуск службы NetworkSchedulerService и запланированной работы UpdateDataWorker
         val startServiceIntent = Intent(this, NetworkSchedulerService::class.java)
         startService(startServiceIntent)
-    }
-
-    private fun createTodoItem(): TodoItem {
-        // Создаем и возвращаем объект TodoItem
-        val id = UUID.randomUUID()
-        val text = "Sample todo item"
-        val importance = Importance.BASIC
-        val deadline = Date()
-        val isDone = false
-        val creationDate = Date()
-        val lastModificationDate = Date()
-        return TodoItem(id, text, importance, deadline, isDone, creationDate, lastModificationDate)
-    }
-
-    private fun createApiResponse(): ApiEntity {
-        val status = "ok"
-        val element = createTodoItem()
-        val revision = 1
-        return ApiEntity(status, null, listOf(element), revision)
+        UpdateDataWorker.enqueuePeriodicWork()
     }
 }
