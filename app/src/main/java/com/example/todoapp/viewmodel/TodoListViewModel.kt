@@ -1,12 +1,16 @@
 package com.example.todoapp.viewmodel
 
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.todoapp.locateLazy
+import com.example.todoapp.model.Event
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.model.TodoItemsRepository
 import com.example.todoapp.retrofit.ApiEntity
+import com.example.todoapp.retrofit.NetworkResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collect
@@ -24,7 +28,28 @@ class TodoListViewModel : ViewModel() {
     val todoItems = todoItemsRepository.getAll().asLiveDataFlow()
     private fun <T> Flow<T>.asLiveDataFlow() = shareIn(viewModelScope, SharingStarted.Eagerly, replay = 1)
 
-//    fun checkRetrofitWork(){
+    private val _showSnackbarEvent = MutableLiveData<Event<String>>()
+    val showSnackbarEvent: LiveData<Event<String>> = _showSnackbarEvent
+
+    fun fetchData() {
+        viewModelScope.launch {
+            when (val result = todoItemsRepository.getAllItemsFromBack()) {
+                is NetworkResult.Success -> {
+                    todoItemsRepository.clearAndInsertAllItems(result.data.list!!)
+                    _showSnackbarEvent.value = Event("Данные успешно загружены")
+                }
+
+                is NetworkResult.Error -> {
+                    val errorMessage = result.errorMessage
+                    val exception = result.exception
+                    // Обработка ошибки, например, отображение Snackbar с сообщением об ошибке
+                    _showSnackbarEvent.value = Event(errorMessage)
+                }
+            }
+        }
+    }
+
+//    fun checkRetrofitWork() {
 //        viewModelScope.launch {
 //            todoItems.collect{
 //                try {
@@ -45,10 +70,24 @@ class TodoListViewModel : ViewModel() {
 //    }
 
     fun updateTodoItem(item: TodoItem) {
-        viewModelScope.launch { todoItemsRepository.update(item) }
+        viewModelScope.launch {
+            item.lastModificationDate = Date()
+            when (val result = todoItemsRepository.updateItem(item)) {
+                is NetworkResult.Success -> {
+                    _showSnackbarEvent.value = Event("Дело сделано!")
+                }
+
+                is NetworkResult.Error -> {
+                    val errorMessage = result.errorMessage
+                    val exception = result.exception
+                    // Обработка ошибки, например, отображение Snackbar с сообщением об ошибке
+                    _showSnackbarEvent.value = Event(errorMessage)
+                }
+            }
+        }
     }
 
     fun deleteTodoItem(item: TodoItem) {
-        viewModelScope.launch { todoItemsRepository.delete(item) }
+        viewModelScope.launch { todoItemsRepository.deleteItem(item) }
     }
 }

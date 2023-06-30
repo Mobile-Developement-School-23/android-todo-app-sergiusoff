@@ -2,7 +2,6 @@ package com.example.todoapp.view
 
 import android.os.Bundle
 import android.view.*
-import android.widget.Toast
 
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -16,6 +15,7 @@ import com.example.todoapp.databinding.FragmentTodoListBinding
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.utils.navigator
 import com.example.todoapp.viewmodel.TodoListViewModel
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
@@ -26,7 +26,7 @@ class TodoListFragment : Fragment(), AdapterListener {
     private lateinit var todoListViewModel: TodoListViewModel
     private lateinit var binding: FragmentTodoListBinding
     private lateinit var todoItemAdapter: TodoItemAdapter
-    private var job: Job? = null
+    private var jobs: MutableList<Job> = mutableListOf()
 
     /**
      * Создает и возвращает представление фрагмента.
@@ -67,9 +67,16 @@ class TodoListFragment : Fragment(), AdapterListener {
         touchHelper.attachToRecyclerView(binding.todosView)
         // Получение экземпляра ViewModel для управления списком задач
         todoListViewModel = ViewModelProvider(this)[TodoListViewModel::class.java]
+
+        todoListViewModel.showSnackbarEvent.observe(viewLifecycleOwner) { event ->
+            event.getContentIfNotHandled()?.let { errorMessage ->
+                Snackbar.make(view, errorMessage, Snackbar.LENGTH_LONG).show()
+            }
+        }
+
         // Запуск наблюдателя жизненного цикла фрагмента для отслеживания изменений в списке задач
 
-        job = viewLifecycleOwner.lifecycleScope.launch {
+        jobs.add(viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 todoListViewModel.todoItems.collect {
                     todoItemAdapter.updateItems(it)
@@ -77,7 +84,7 @@ class TodoListFragment : Fragment(), AdapterListener {
                         .format(it.count { item -> item.isDone }, it.size)
                 }
             }
-        }
+        })
 
         // Настройка слушателя изменения состояния панели приложения
         binding.appbarLayout.addOnOffsetChangedListener { appBar, offset ->
@@ -85,10 +92,9 @@ class TodoListFragment : Fragment(), AdapterListener {
             binding.motionLayout.progress = seekPosition
         }
 
-        // понятия не имею что тут нужно
+        // понятия не имею что тут нужно. Пусть будет refresh пока
         binding.showRdyIcon.setOnClickListener {
-//            todoListViewModel.checkRetrofitWork()
-
+            todoListViewModel.fetchData()
         }
     }
 
@@ -114,10 +120,5 @@ class TodoListFragment : Fragment(), AdapterListener {
      */
     override fun onEditClicked(todoItem: TodoItem) {
         navigator().showDetails(todoItem)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        job?.cancel()
     }
 }

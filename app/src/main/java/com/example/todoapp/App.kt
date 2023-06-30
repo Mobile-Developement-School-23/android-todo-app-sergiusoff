@@ -10,6 +10,9 @@ import com.example.todoapp.retrofit.ApiResponseSerializer
 import com.example.todoapp.retrofit.TodoItemSerializer
 import com.example.todoapp.retrofit.TodoItemsApiService
 import com.google.gson.GsonBuilder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -44,9 +47,17 @@ class App : Application() {
             }.build())
             .build()
             .create(TodoItemsApiService::class.java)
-
         ServiceLocator.register(todoItemsApiService)
-        ServiceLocator.register(TodoItemsRepository(locate(), locate()))
+
+        val tdr = TodoItemsRepository(locate(), locate())
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                tdr.refreshRevision()
+            } catch (e: Exception) {
+                // Обработка ошибок
+            }
+        }
+        ServiceLocator.register(tdr)
     }
 }
 

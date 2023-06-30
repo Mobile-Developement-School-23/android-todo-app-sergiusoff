@@ -27,4 +27,10 @@ interface TodoItemDao {
 
     @Delete
     suspend fun delete(item: TodoItem)
+
+    @Query("DELETE FROM TodoItems")
+    suspend fun deleteAll()
+
+    @Insert(onConflict = REPLACE)
+    suspend fun insertAll(items: List<TodoItem>)
 }

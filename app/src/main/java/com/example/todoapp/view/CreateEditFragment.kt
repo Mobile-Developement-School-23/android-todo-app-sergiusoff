@@ -13,6 +13,7 @@ import com.example.todoapp.model.Importance
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.utils.navigator
 import com.example.todoapp.viewmodel.CreateEditViewModel
+import com.example.todoapp.viewmodel.SharedViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
 import java.text.SimpleDateFormat
 import java.util.*
@@ -21,7 +22,9 @@ import java.util.*
  * Фрагмент для создания и редактирования элемента списка задач.
  */
 class CreateEditFragment : Fragment() {
-
+    private val sharedViewModel: SharedViewModel by lazy {
+        ViewModelProvider(requireActivity())[SharedViewModel::class.java]
+    }
     //    binding упрощает доступ к представлениям и повышает безопасность кода,
     //    предотвращая возможные ошибки NullPointerException при использовании _binding.
 
@@ -80,6 +83,7 @@ class CreateEditFragment : Fragment() {
         _binding = FragmentCreateEditBinding.inflate(inflater, container, false)
         val view = binding.root
         creationDate = Date()
+        ViewModelProvider(this)[CreateEditViewModel::class.java].sharedViewModel = sharedViewModel
         createEditViewModel = ViewModelProvider(this)[CreateEditViewModel::class.java]
         val item = tempItem
         if (item != null){

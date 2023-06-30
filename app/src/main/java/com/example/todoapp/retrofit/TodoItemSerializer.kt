@@ -49,9 +49,9 @@ class TodoItemSerializer : JsonSerializer<TodoItem>, JsonDeserializer<TodoItem> 
         val text = jsonObject?.get("text")?.asString ?: ""
         val importance = Importance.valueOf(jsonObject?.get("importance")?.asString?.uppercase() ?: "LOW")
         val deadline = jsonObject?.get("deadline")?.asLong?.let { Date(it) }
-        val isDone = jsonObject?.get("isDone")?.asBoolean ?: false
-        val creationDate = Date(jsonObject?.get("creationDate")?.asLong ?: 0)
-        val lastModificationDate =  Date(jsonObject?.get("lastModificationDate")?.asLong ?: 0)
+        val isDone = jsonObject?.get("done")?.asBoolean ?: false
+        val creationDate = Date(jsonObject?.get("created_at")?.asLong ?: 0)
+        val lastModificationDate =  Date(jsonObject?.get("changed_at")?.asLong ?: 0)
         return TodoItem(id, text, importance, deadline, isDone, creationDate, lastModificationDate)
     }
 }

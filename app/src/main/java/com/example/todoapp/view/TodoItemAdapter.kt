@@ -220,8 +220,10 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
     * @param position Позиция элемента, который должен быть удален.
      */
     private fun deleteItem(position: Int) {
-        adapterListener?.onTodoItemDeleted(todoItems[position])
-        notifyItemRemoved(position)
+        if (position >= 0) {
+            adapterListener?.onTodoItemDeleted(todoItems[position])
+            notifyItemRemoved(position)
+        }
     }
 
     /**
@@ -229,8 +231,10 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
      * @param position Позиция элемента, который должен быть отмечен.
      */
     private fun checkItem(position: Int) {
-        todoItems[position].isDone = !todoItems[position].isDone
-        adapterListener?.onTodoItemChecked(todoItems[position])
-        notifyItemChanged(position)
+        if (position >= 0) {
+            todoItems[position].isDone = !todoItems[position].isDone
+            adapterListener?.onTodoItemChecked(todoItems[position])
+            notifyItemChanged(position)
+        }
     }
 }
