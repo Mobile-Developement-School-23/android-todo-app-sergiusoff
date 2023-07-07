@@ -1,5 +1,7 @@
 package com.example.todoapp.model
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import com.example.todoapp.database.TodoItemsDatabase
 import com.example.todoapp.retrofit.ApiEntity
@@ -17,22 +19,21 @@ import javax.inject.Inject
 /**
  * Репозиторий для управления списком задач [TodoItem].
  *
- * ToDo: разбить на несколько репозиториев (db, web)
  * @property db Экземпляр базы данных для доступа к локальным данным.
  * @property todoItemsApiService Экземпляр API-сервиса для доступа к удаленным данным.
  */
 
 class TodoItemsRepositoryImpl @Inject constructor(
     private val db: TodoItemsDatabase,
-    private val todoItemsApiService: TodoItemsApiService
+    private val todoItemsApiService: TodoItemsApiService,
+    context: Context
 ) : TodoItemsRepository {
 
-    init {
-        Log.d("UPDATE_ITEM", "TodoItemsRepositoryImpl Create")
-    }
+    private var sharedPreferences: SharedPreferences =
+        context.getSharedPreferences("todoItemApp", Context.MODE_PRIVATE)
 
     var firstError: Boolean = true
-    var revision: Int = 21
+    var revision: Int = 42
     private val dao get() = db.itemsDao
 
     /**
@@ -98,12 +99,6 @@ class TodoItemsRepositoryImpl @Inject constructor(
                 in 500..599 -> "Ошибка сервера"
                 else -> "Неизвестная ошибка"
             }
-
-//            if (e.code() == 401 && firstError){
-//                firstError = false
-//                refreshRevision()
-//            }
-
             // Возвращаем результат выполнения запроса с ошибкой в виде объекта
             NetworkResult.Error(errorMessage, e)
             // Обработка исключения типа UnknownHostException, возникающего при проблемах с сетевым подключением
@@ -180,7 +175,11 @@ class TodoItemsRepositoryImpl @Inject constructor(
      */
     override suspend fun addItem(item: TodoItem): NetworkResult<ApiEntity> {
         add(item)
-        return postItemOnBack(item)
+        val result = postItemOnBack(item)
+        if (result is NetworkResult.Error){
+            sharedPreferences.edit().putBoolean("localChanged", true).apply()
+        }
+        return result
     }
 
     /**
@@ -190,9 +189,12 @@ class TodoItemsRepositoryImpl @Inject constructor(
      * @return Результат запроса в виде [NetworkResult].
      */
     override suspend fun updateItem(item: TodoItem): NetworkResult<ApiEntity> {
-        Log.d("UPDATE_ITEM_REPO_IMPL", "$revision\t${item.toString()}")
         update(item)
-        return putItemOnBack(item)
+        val result = putItemOnBack(item)
+        if (result is NetworkResult.Error){
+            sharedPreferences.edit().putBoolean("localChanged", true).apply()
+        }
+        return result
     }
 
     /**
@@ -203,7 +205,11 @@ class TodoItemsRepositoryImpl @Inject constructor(
      */
     override suspend fun deleteItem(item: TodoItem): NetworkResult<ApiEntity> {
         delete(item)
-        return deleteItemOnBack(item.id.toString())
+        val result = deleteItemOnBack(item.id.toString())
+        if (result is NetworkResult.Error){
+            sharedPreferences.edit().putBoolean("localChanged", true).apply()
+        }
+        return result
     }
 
     /**

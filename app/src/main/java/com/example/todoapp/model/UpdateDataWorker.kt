@@ -6,9 +6,15 @@ import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.example.todoapp.di.WorkerKey
+import com.example.todoapp.retrofit.NetworkResult
+import dagger.Binds
+import dagger.Module
+import dagger.multibindings.IntoMap
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -18,14 +24,11 @@ import javax.inject.Inject
  * @param context Контекст приложения.
  * @param params Параметры рабочего.
  */
-class UpdateDataWorker(
+class UpdateDataWorker @Inject constructor(
     context: Context,
     params: WorkerParameters,
+    private val repository: TodoItemsRepository
 ) : CoroutineWorker(context, params) {
-
-    @Inject
-    lateinit var repository: TodoItemsRepository
-
 
     /**
     *
@@ -36,8 +39,19 @@ class UpdateDataWorker(
     override suspend fun doWork(): Result {
         Log.d("PERIODIC WORK", "Before try")
         try {
-            Log.d("PERIODIC WORK", "Start try")
-            repository.getAllItemsFromBack()
+            when (val result = repository.getAllItemsFromBack()) {
+                is NetworkResult.Success -> {
+                    // В случае успешного получения данных, очищаем и обновляем список задач и отображаем Snackbar
+                    repository.clearAndInsertAllItems(result.data.list!!)
+                }
+                is NetworkResult.Error -> {
+                    // Уведомление о том что не получилось обновить в фоне, мб предложение
+                // отключить попытки пробраться в сеть на определённый период
+//                    val errorMessage = result.errorMessage
+//                    val exception = result.exception
+
+                }
+            }
             Log.d("PERIODIC WORK", "Mid try")
             return Result.success()
         } catch (e: Exception) {
@@ -45,36 +59,45 @@ class UpdateDataWorker(
             return Result.retry()
         }
     }
+
+    @Module
+    abstract class Builder {
+        @Binds
+        @IntoMap
+        @WorkerKey(UpdateDataWorker::class)
+        abstract fun bindHelloWorldWorker(worker: UpdateDataWorker): CoroutineWorker
+    }
+
+    companion object {
+
+        /**
+         * Функция для запуска периодической работы рабочего исполнителя.
+         * Создается периодический запрос работы с заданными интервалом и ограничениями.
+         * Запускается рабочий исполнитель с уникальным идентификатором.
+         */
+        fun enqueuePeriodicWork(context: Context) {
+
+            // Определение ограничений для работы
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .setRequiresCharging(false)
+                .setRequiresBatteryNotLow(false)
+                .build()
+
+            // Создание периодического запроса работы
+            val periodicWorkRequest = PeriodicWorkRequestBuilder<UpdateDataWorker>(
+                repeatInterval = 1,
+                repeatIntervalTimeUnit = TimeUnit.MINUTES
+            )
+                .setConstraints(constraints)
+                .build()
+
+            // Запуск периодической работы рабочего исполнителя
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                "UpdateDataWorker",
+                ExistingPeriodicWorkPolicy.KEEP,
+                periodicWorkRequest
+            )
+        }
+    }
 }
-//    companion object {
-//
-//        /**
-//         * Функция для запуска периодической работы рабочего исполнителя.
-//         * Создается периодический запрос работы с заданными интервалом и ограничениями.
-//         * Запускается рабочий исполнитель с уникальным идентификатором.
-//         */
-//        fun enqueuePeriodicWork() {
-//
-//            // Определение ограничений для работы
-//            val constraints = Constraints.Builder()
-//                .setRequiredNetworkType(NetworkType.CONNECTED)
-//                .setRequiresCharging(false)
-//                .setRequiresBatteryNotLow(false)
-//                .build()
-//
-//            // Создание периодического запроса работы
-//            val periodicWorkRequest = PeriodicWorkRequestBuilder<UpdateDataWorker>(
-//                repeatInterval = 1,
-//                repeatIntervalTimeUnit = TimeUnit.MINUTES
-//            )
-//                .setConstraints(constraints)
-//                .build()
-//
-//            // Запуск периодической работы рабочего исполнителя
-//            WorkManager.getInstance().enqueueUniquePeriodicWork(
-//                "UpdateDataWorker",
-//                ExistingPeriodicWorkPolicy.KEEP,
-//                periodicWorkRequest
-//            )
-//        }
-//    }

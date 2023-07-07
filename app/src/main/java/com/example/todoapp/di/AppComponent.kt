@@ -3,6 +3,7 @@ package com.example.todoapp.di
 import android.content.Context
 import androidx.room.Room
 import com.example.todoapp.database.TodoItemsDatabase
+import com.example.todoapp.model.DaggerWorkerFactory
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.model.TodoItemsRepository
 import com.example.todoapp.model.TodoItemsRepositoryImpl
@@ -39,6 +40,10 @@ interface AppComponent {
     fun inject(todoListFragment: TodoListFragment)
     fun inject(networkSchedulerService: NetworkSchedulerService)
     fun inject(updateDataWorker: UpdateDataWorker)
+
+    fun daggerWorkerFactory(): DaggerWorkerFactory
+
+    fun workerSubcomponentBuilder(): WorkerSubcomponent.Builder
 
     @Component.Builder
     interface Builder {

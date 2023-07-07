@@ -3,8 +3,10 @@ package com.example.todoapp.retrofit
 import android.annotation.SuppressLint
 import android.app.job.JobParameters
 import android.app.job.JobService
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.net.ConnectivityManager
 import android.util.Log
 import com.example.todoapp.App
@@ -19,7 +21,7 @@ import javax.inject.Inject
 /**
  * Служба планировщика сетевых операций.
  */
-class NetworkSchedulerService() : JobService(), ConnectivityReceiver.ConnectivityReceiverListener {
+class NetworkSchedulerService : JobService(), ConnectivityReceiver.ConnectivityReceiverListener {
 
     @SuppressLint("SpecifyJobSchedulerIdRange")
     private val TAG = NetworkSchedulerService::class.java.simpleName
@@ -27,7 +29,8 @@ class NetworkSchedulerService() : JobService(), ConnectivityReceiver.Connectivit
 
     @Inject
     lateinit var repository: TodoItemsRepository
-//    private val repository: TodoItemsRepositoryImpl by locateLazy()
+
+    private var sharedPreferences: SharedPreferences? = null
 
     /**
      * Метод вызывается при создании службы.
@@ -38,6 +41,7 @@ class NetworkSchedulerService() : JobService(), ConnectivityReceiver.Connectivit
         Log.i(TAG, "Service created")
         (applicationContext as App).appComponent.inject(this)
         mConnectivityReceiver = ConnectivityReceiver(this)
+        sharedPreferences = applicationContext.getSharedPreferences("todoItemApp", Context.MODE_PRIVATE)
     }
 
     /**
@@ -78,7 +82,7 @@ class NetworkSchedulerService() : JobService(), ConnectivityReceiver.Connectivit
     @SuppressLint("SpecifyJobSchedulerIdRange")
     override fun onNetworkConnectionChanged(isConnected: Boolean) {
         Log.i(TAG, "onNetworkConnectionChanged")
-        if (isConnected) {
+        if (isConnected && sharedPreferences!!.getBoolean("localChanged", false)) {
             Log.i(TAG, "isConnected")
             // Запускаем корутину в IO-потоке
             CoroutineScope(Dispatchers.IO).launch {

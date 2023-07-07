@@ -140,28 +140,6 @@ class MainActivity : AppCompatActivity(), Navigator {
         // Запуск службы NetworkSchedulerService и запланированной работы UpdateDataWorker
         val startServiceIntent = Intent(this, NetworkSchedulerService::class.java)
         startService(startServiceIntent)
-
-
-        // Определение ограничений для работы
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .setRequiresCharging(false)
-            .setRequiresBatteryNotLow(false)
-            .build()
-
-        // Создание периодического запроса работы
-        val periodicWorkRequest = PeriodicWorkRequestBuilder<UpdateDataWorker>(
-            repeatInterval = 1,
-            repeatIntervalTimeUnit = TimeUnit.MINUTES
-        )
-            .setConstraints(constraints)
-            .build()
-
-        // Запуск периодической работы рабочего исполнителя
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "UpdateDataWorker",
-            ExistingPeriodicWorkPolicy.KEEP,
-            periodicWorkRequest
-        )
+        UpdateDataWorker.enqueuePeriodicWork(this)
     }
 }
