@@ -7,23 +7,27 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.util.Log
-import com.example.todoapp.locateLazy
+import com.example.todoapp.App
 import com.example.todoapp.model.TodoItemsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @SuppressLint("SpecifyJobSchedulerIdRange")
 /**
  * Служба планировщика сетевых операций.
  */
-class NetworkSchedulerService : JobService(), ConnectivityReceiver.ConnectivityReceiverListener {
+class NetworkSchedulerService() : JobService(), ConnectivityReceiver.ConnectivityReceiverListener {
 
     @SuppressLint("SpecifyJobSchedulerIdRange")
     private val TAG = NetworkSchedulerService::class.java.simpleName
     private lateinit var mConnectivityReceiver: ConnectivityReceiver
-    private val repository: TodoItemsRepository by locateLazy()
+
+    @Inject
+    lateinit var repository: TodoItemsRepository
+//    private val repository: TodoItemsRepositoryImpl by locateLazy()
 
     /**
      * Метод вызывается при создании службы.
@@ -32,6 +36,7 @@ class NetworkSchedulerService : JobService(), ConnectivityReceiver.ConnectivityR
     override fun onCreate() {
         super.onCreate()
         Log.i(TAG, "Service created")
+        (applicationContext as App).appComponent.inject(this)
         mConnectivityReceiver = ConnectivityReceiver(this)
     }
 
@@ -79,7 +84,8 @@ class NetworkSchedulerService : JobService(), ConnectivityReceiver.ConnectivityR
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     // Выполняем операции с использованием репозитория
-
+                    Log.d("NetworkSchedulerService", "I AM IN NETWORK 0")
+                    Log.d("NetworkSchedulerService", "I AM IN NETWORK 1")
                     // Отправка всех элементов на удаленный сервер
                     when (val response = repository.postAllItemsOnBack(repository.getAll().first())) {
                         is NetworkResult.Success -> {
@@ -91,8 +97,10 @@ class NetworkSchedulerService : JobService(), ConnectivityReceiver.ConnectivityR
                             Log.i(TAG, response.errorMessage)
                         }
                     }
+                    Log.d("NetworkSchedulerService", "I AM IN NETWORK 2")
+
                 } catch (e: Exception) {
-                    // Обработка ошибок
+                    Log.d("NetworkSchedulerService", e.toString())
                 }
             }
         }

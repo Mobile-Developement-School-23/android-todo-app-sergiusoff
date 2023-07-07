@@ -4,10 +4,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.todoapp.locateLazy
 import com.example.todoapp.model.Event
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.model.TodoItemsRepository
+
 import com.example.todoapp.retrofit.NetworkResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,16 +16,17 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import java.util.Date
+import javax.inject.Inject
 
 /**
  * ViewModel, отвечающая за управление списком задач.
  */
-class TodoListViewModel : ViewModel() {
+class TodoListViewModel @Inject constructor(private val todoItemsRepositoryImpl: TodoItemsRepository) : ViewModel() {
     // Поле, содержащее экземпляр репозитория для работы с задачами
-    private val todoItemsRepository: TodoItemsRepository by locateLazy()
+//    private val todoItemsRepositoryImpl: TodoItemsRepositoryImpl by locateLazy()
 
     // Поле, представляющее список задач в виде LiveDataFlow
-    val todoItems = todoItemsRepository.getAll().asLiveDataFlow()
+    val todoItems = todoItemsRepositoryImpl.getAll().asLiveDataFlow()
 
     // Функция-расширение для преобразования Flow в LiveDataFlow
     private fun <T> Flow<T>.asLiveDataFlow() = shareIn(CoroutineScope(Dispatchers.IO), SharingStarted.Eagerly, replay = 1)
@@ -47,10 +48,10 @@ class TodoListViewModel : ViewModel() {
         // Запускаем корутину в viewModelScope, которая автоматически отменяется при выходе из ViewModel
         viewModelScope.launch {
             // Запрос данных из репозитория
-            when (val result = todoItemsRepository.getAllItemsFromBack()) {
+            when (val result = todoItemsRepositoryImpl.getAllItemsFromBack()) {
                 is NetworkResult.Success -> {
                     // В случае успешного получения данных, очищаем и обновляем список задач и отображаем Snackbar
-                    todoItemsRepository.clearAndInsertAllItems(result.data.list!!)
+                    todoItemsRepositoryImpl.clearAndInsertAllItems(result.data.list!!)
                     _showSnackbarEvent.value = Event("Данные успешно загружены")
                 }
                 is NetworkResult.Error -> {
@@ -72,7 +73,7 @@ class TodoListViewModel : ViewModel() {
         // Запускаем корутину в viewModelScope, которая автоматически отменяется при выходе из ViewModel
         viewModelScope.launch {
             item.lastModificationDate = Date()
-            when (val result = todoItemsRepository.updateItem(item)) {
+            when (val result = todoItemsRepositoryImpl.updateItem(item)) {
                 is NetworkResult.Success -> {
                     _showSnackbarEvent.value = Event("Клик! Статус инвертирован!")
                 }
@@ -95,7 +96,7 @@ class TodoListViewModel : ViewModel() {
     fun deleteTodoItem(item: TodoItem) {
         // Запускаем корутину в viewModelScope, которая автоматически отменяется при выходе из ViewModel
         viewModelScope.launch {
-            when (val result = todoItemsRepository.deleteItem(item)) {
+            when (val result = todoItemsRepositoryImpl.deleteItem(item)) {
                 is NetworkResult.Success -> {
                     _showSnackbarEvent.value = Event("Ты-Дыщ! Успешно удалено!")
                 }

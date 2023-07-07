@@ -1,35 +1,48 @@
 package com.example.todoapp.view
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.*
 
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.todoapp.R
-import com.example.todoapp.databinding.FragmentCreateEditBinding
+import com.example.todoapp.appComponent
 import com.example.todoapp.databinding.FragmentTodoListBinding
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.utils.navigator
 import com.example.todoapp.viewmodel.TodoListViewModel
+import com.example.todoapp.viewmodel.TodoListViewModelFactory
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+import androidx.fragment.app.viewModels
 
 /**
  * Фрагмент списка задач TodoList.
  */
 class TodoListFragment : Fragment(), AdapterListener {
-    private lateinit var todoListViewModel: TodoListViewModel
+//    private lateinit var todoListViewModel: TodoListViewModel
+    private val todoListViewModel: TodoListViewModel by viewModels { factory }
     private var _binding: FragmentTodoListBinding? = null
     private val binding get() = _binding!!
     private lateinit var todoItemAdapter: TodoItemAdapter
     private var jobs: MutableList<Job> = mutableListOf()
+
+    @Inject
+    lateinit var factory: TodoListViewModelFactory
+
+    override fun onAttach(context: Context) {
+        context.appComponent.inject(this)
+        super.onAttach(context)
+    }
 
     /**
      * Создает и возвращает представление фрагмента.
@@ -69,7 +82,8 @@ class TodoListFragment : Fragment(), AdapterListener {
         val touchHelper = ItemTouchHelper(itemTouchHelperCallback)
         touchHelper.attachToRecyclerView(binding.todosView)
         // Получение экземпляра ViewModel для управления списком задач
-        todoListViewModel = ViewModelProvider(this)[TodoListViewModel::class.java]
+//        todoListViewModel = ViewModelProvider(this)[TodoListViewModel::class.java]
+
 
         todoListViewModel.showSnackbarEvent.observe(viewLifecycleOwner) { event ->
             event.getContentIfNotHandled()?.let { errorMessage ->

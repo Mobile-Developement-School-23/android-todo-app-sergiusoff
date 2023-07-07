@@ -13,15 +13,25 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.ViewModelProvider
+import androidx.work.Configuration
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.todoapp.R
+import com.example.todoapp.appComponent
 import com.example.todoapp.databinding.ActivityMainBinding
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.model.UpdateDataWorker
 import com.example.todoapp.retrofit.NetworkSchedulerService
+import com.example.todoapp.utils.DataSynchronizer
 import com.example.todoapp.utils.Navigator
 import com.example.todoapp.viewmodel.SharedViewModel
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
+import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
 /**
  * Основная активность приложения, реализующая навигацию между фрагментами и операции с элементами списка дел.
@@ -32,6 +42,7 @@ class MainActivity : AppCompatActivity(), Navigator {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        appComponent.inject(this)
 
         // Создание экземпляра привязки для разметки activity_main.xml
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -63,18 +74,19 @@ class MainActivity : AppCompatActivity(), Navigator {
             findViewById<FloatingActionButton>(R.id.floatingActionButton).hide()
         }
 
-        // Наблюдение за изменениями в LiveData todoItemProcess
-        sharedViewModel.todoItemProcess.observe(this) { event ->
-            Log.d("MainActivity", event.peekContent())
+        // Запуск планировщика задач
+        scheduleJob()
+    }
 
+    @Inject
+    fun checkAddEditResults(dataSynchronizer: DataSynchronizer){
+        dataSynchronizer.todoItemProcess.observe(this){event ->
+            Log.d("MainActivity", event.peekContent())
             // Получение и обработка события, если оно не было обработано ранее
             event.getContentIfNotHandled()?.let { result ->
                 Snackbar.make(binding.root, result, Snackbar.LENGTH_LONG).show()
             }
         }
-
-        // Запуск планировщика задач
-        scheduleJob()
     }
 
     /**
@@ -125,10 +137,31 @@ class MainActivity : AppCompatActivity(), Navigator {
 
     override fun onStart() {
         super.onStart()
-
         // Запуск службы NetworkSchedulerService и запланированной работы UpdateDataWorker
         val startServiceIntent = Intent(this, NetworkSchedulerService::class.java)
         startService(startServiceIntent)
-        UpdateDataWorker.enqueuePeriodicWork()
+
+
+        // Определение ограничений для работы
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .setRequiresCharging(false)
+            .setRequiresBatteryNotLow(false)
+            .build()
+
+        // Создание периодического запроса работы
+        val periodicWorkRequest = PeriodicWorkRequestBuilder<UpdateDataWorker>(
+            repeatInterval = 1,
+            repeatIntervalTimeUnit = TimeUnit.MINUTES
+        )
+            .setConstraints(constraints)
+            .build()
+
+        // Запуск периодической работы рабочего исполнителя
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "UpdateDataWorker",
+            ExistingPeriodicWorkPolicy.KEEP,
+            periodicWorkRequest
+        )
     }
 }

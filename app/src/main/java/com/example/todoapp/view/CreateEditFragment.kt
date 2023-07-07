@@ -1,5 +1,6 @@
 package com.example.todoapp.view
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -7,32 +8,36 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
+import com.example.todoapp.appComponent
 import com.example.todoapp.databinding.FragmentCreateEditBinding
 import com.example.todoapp.model.Importance
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.utils.navigator
 import com.example.todoapp.viewmodel.CreateEditViewModel
+import com.example.todoapp.viewmodel.CreateEditViewModelFactory
 import com.example.todoapp.viewmodel.SharedViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.inject.Inject
 
 /**
  * Фрагмент для создания и редактирования элемента списка задач.
  */
 class CreateEditFragment : Fragment() {
-    private val sharedViewModel: SharedViewModel by lazy {
-        ViewModelProvider(requireActivity())[SharedViewModel::class.java]
-    }
-    //    binding упрощает доступ к представлениям и повышает безопасность кода,
-    //    предотвращая возможные ошибки NullPointerException при использовании _binding.
+//    private val sharedViewModel: SharedViewModel by lazy {
+//        ViewModelProvider(requireActivity())[SharedViewModel::class.java]
+//    }
 
+    // binding упрощает доступ к представлениям и повышает безопасность кода,
+    // предотвращая возможные ошибки NullPointerException при использовании _binding.
     // хранение привязки (binding) фрагмента
     private var _binding: FragmentCreateEditBinding? = null
     // свойство-делегат, которое обеспечивает доступ к привязке фрагмента
     private val binding get() = _binding!!
-    private lateinit var createEditViewModel: CreateEditViewModel
+//    private lateinit var createEditViewModel: CreateEditViewModel
 
 
     // Целочисленное значение, переданное через аргументы фрагмента (см. onCreate()) необходимое для проверки новый/старый объект дела.
@@ -42,6 +47,19 @@ class CreateEditFragment : Fragment() {
     }
     private var deadlineDate: Date? = null
     private lateinit var creationDate: Date
+
+
+    private val createEditViewModel: CreateEditViewModel by viewModels {
+        factory.create(tempItem?:TodoItem(UUID.randomUUID(), "", Importance.LOW, Date(), false, Date(), Date()))
+    }
+
+    override fun onAttach(context: Context) {
+        context.appComponent.inject(this)
+        super.onAttach(context)
+    }
+
+    @Inject
+    lateinit var factory: CreateEditViewModelFactory.Factory
     companion object {
         private const val ARG_MY_ITEM = "arg_my_int"
 
@@ -83,8 +101,8 @@ class CreateEditFragment : Fragment() {
         _binding = FragmentCreateEditBinding.inflate(inflater, container, false)
         val view = binding.root
         creationDate = Date()
-        ViewModelProvider(this)[CreateEditViewModel::class.java].sharedViewModel = sharedViewModel
-        createEditViewModel = ViewModelProvider(this)[CreateEditViewModel::class.java]
+//        createEditViewModel.sharedViewModel = sharedViewModel
+
         val item = tempItem
         if (item != null){
             Log.d("KEEEEEEEEK", "$item")
@@ -114,8 +132,12 @@ class CreateEditFragment : Fragment() {
             val modify = Date()
             if (item == null)
                 createEditViewModel.saveTodoItem(TodoItem(UUID.randomUUID(), description, imp, deadlineDate, false, creationDate, modify))
-            else
-                createEditViewModel.updateTodoItem(TodoItem(item.id, description, imp, deadlineDate, false, creationDate, modify))
+            else{
+                Log.d("UPDATE_ITEM", tempItem.toString())
+                tempItem?.text = description
+                createEditViewModel.updateTodoItem()
+//                createEditViewModel.updateTodoItem(TodoItem(item.id, description, imp, deadlineDate, false, creationDate, modify))
+            }
             onCancelPressed()
         }
 
