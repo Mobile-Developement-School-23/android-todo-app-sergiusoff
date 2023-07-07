@@ -66,11 +66,7 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
             binding.importance.text = context.getString(R.string.item_imp).format(item.importance.name)
             binding.create.text = context.getString(R.string.date_create).format(dateFormat.format(item.creationDate))
 
-            val modifyText = if (item.lastModificationDate != null) {
-                context.getString(R.string.date_modify).format(dateFormat.format(item.lastModificationDate!!))
-            } else {
-                context.getString(R.string.date_modify).format(context.getString(R.string.date_modify_no))
-            }
+            val modifyText = context.getString(R.string.date_modify).format(dateFormat.format(item.lastModificationDate))
             binding.modify.text = modifyText
 
             val deadlineText = if (item.deadline != null) {
@@ -108,7 +104,7 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
 
             binding.buttonEdit.setOnClickListener {
                 popupWindowMenu.dismiss()
-                adapterListener?.onEditClicked(adapterPosition)
+                adapterListener?.onEditClicked(todoItems[ind])
             }
 
             binding.buttonDetails.setOnClickListener {
@@ -150,13 +146,13 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
                 binding.taskReadyFlag.setImageDrawable(uncheckedImage)
                 binding.todoItemText.paintFlags = binding.todoItemText.paintFlags and STRIKE_THRU_TEXT_FLAG.inv()
                 binding.taskImportance.clearColorFilter()
-                if (!todoItem.isDone && todoItem.importance == Importance.HIGH){
+                if (!todoItem.isDone && todoItem.importance == Importance.IMPORTANT){
                     binding.taskReadyFlag.setImageDrawable(uncheckedHighImage)
                     binding.taskImportance.setColorFilter(ContextCompat.getColor(context, R.color.red))
                 }
             }
             when (todoItem.importance){
-                Importance.HIGH -> {
+                Importance.IMPORTANT -> {
                     binding.taskImportance.visibility = View.VISIBLE
                     binding.taskImportance.setImageDrawable(doubleExclamation)
                 }
@@ -168,7 +164,7 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
             }
             binding.taskReadyFlag.setOnClickListener{ checkItem(adapterPosition) }
             binding.info.setOnClickListener { showInfo(adapterPosition, binding.info) }
-            binding.root.setOnClickListener { adapterListener?.onEditClicked(adapterPosition) }
+            binding.root.setOnClickListener { adapterListener?.onEditClicked(todoItem) }
             binding.root.setOnLongClickListener { showMenu(adapterPosition, binding.info)
                 true }
         }
@@ -224,8 +220,10 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
     * @param position Позиция элемента, который должен быть удален.
      */
     private fun deleteItem(position: Int) {
-        adapterListener?.onTodoItemDeleted(todoItems[position])
-        notifyItemRemoved(position)
+        if (position >= 0) {
+            adapterListener?.onTodoItemDeleted(todoItems[position])
+            notifyItemRemoved(position)
+        }
     }
 
     /**
@@ -233,7 +231,10 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
      * @param position Позиция элемента, который должен быть отмечен.
      */
     private fun checkItem(position: Int) {
-        adapterListener?.onTodoItemChecked(position)
-        notifyItemChanged(position)
+        if (position >= 0) {
+            todoItems[position].isDone = !todoItems[position].isDone
+            adapterListener?.onTodoItemChecked(todoItems[position])
+            notifyItemChanged(position)
+        }
     }
 }

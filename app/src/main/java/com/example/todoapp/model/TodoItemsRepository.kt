@@ -1,139 +1,203 @@
 package com.example.todoapp.model
 
+import android.util.Log
+import com.example.todoapp.database.TodoItemsDatabase
+import com.example.todoapp.retrofit.ApiEntity
+import com.example.todoapp.retrofit.NetworkResult
+import com.example.todoapp.retrofit.TodoItemsApiService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import java.util.*
+import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.net.UnknownHostException
+
 
 /**
  * Репозиторий для управления списком задач [TodoItem].
  *
- * @property todoItems Список задач.
- * @property todoItemsFlow Поток, содержащий список задач.
+ * ToDo: разбить на несколько репозиториев (db, web)
+ * @property db Экземпляр базы данных для доступа к локальным данным.
+ * @property todoItemsApiService Экземпляр API-сервиса для доступа к удаленным данным.
  */
-class TodoItemsRepository {
-    private val todoItems = mutableListOf<TodoItem>()
-    private val todoItemsFlow = MutableStateFlow(todoItems)
+class TodoItemsRepository(
+    private val db: TodoItemsDatabase,
+    private val todoItemsApiService: TodoItemsApiService
+) {
+
+    var revision: Int = 21
+    private val dao get() = db.itemsDao
 
     /**
-     * Инициализирует репозиторий TodoItemsRepository.
+     * Возвращает все элементы списка задач в виде `Flow`.
      */
-    init {
-        // Добавление нескольких элементов TodoItem в список при инициализации объекта
-        // для примера и тестирования функциональности.
-        addTodoItem(TodoItem("-1", "1тест", Importance.NORMAL, Date(115, 12, 15), false, Date(115, 12, 12), Date(117, 12, 31)))
-        addTodoItem(TodoItem("-1", "2тесттесттесттесттесттесттест", Importance.LOW, null, true, Date(118, 1, 1), null))
-        addTodoItem(TodoItem("-1", "3тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.HIGH, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "4тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.NORMAL, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "5тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.LOW, Date(118, 12, 31), false, Date(2017, 12, 31), null))
-        addTodoItem(TodoItem("-1", "6тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.HIGH, null, false, Date(117, 12, 31), Date(118, 12, 31)))
-        addTodoItem(TodoItem("-1", "7тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.NORMAL, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "8тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.LOW, Date(118, 12, 31), false, Date(2017, 12, 31), null))
-        addTodoItem(TodoItem("-1", "9тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.HIGH, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "10тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.NORMAL, null, false, Date(117, 12, 31), Date(118, 12, 31)))
-        addTodoItem(TodoItem("-1", "11тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.LOW, Date(118, 12, 31), false, Date(2017, 12, 31), null))
-        addTodoItem(TodoItem("-1", "9тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.HIGH, Date(118, 12, 31), false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "10тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.NORMAL, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "11тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.LOW, Date(118, 12, 31), false, Date(2017, 12, 31), null))
-        addTodoItem(TodoItem("-1", "15тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.HIGH, Date(118, 12, 31), false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "16тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.HIGH, Date(118, 12, 31), false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "17sf", Importance.HIGH, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "18тесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттесттеттесттесттетесттесттест", Importance.HIGH, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "", Importance.HIGH, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "20fs", Importance.LOW, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "21fs", Importance.NORMAL, null, false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "22fs", Importance.HIGH, Date(118, 12, 31), false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "23fs", Importance.LOW, Date(118, 12, 31), false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "24fs", Importance.NORMAL, Date(118, 12, 31), false, Date(117, 12, 31), null))
-        addTodoItem(TodoItem("-1", "25fs", Importance.HIGH, Date(118, 12, 31), false, Date(117, 12, 31), Date(118, 12, 31)))
-        addTodoItem(TodoItem("-1", "26fs", Importance.HIGH, null, false, Date(117, 12, 31), Date(118, 12, 31)))
-        addTodoItem(TodoItem("-1", "1тест", Importance.NORMAL, null, true, Date(117, 12, 12), null))
-        addTodoItem(TodoItem("-1", "2тесттесттесттесттесттесттест", Importance.LOW, null, false, Date(117, 1, 1), null))
+    fun getAll(): Flow<List<TodoItem>> = dao.getAll()
+
+    /**
+     * Добавляет новый элемент списка задач.
+     *
+     * @param item Новый элемент для добавления.
+     */
+    suspend fun add(item: TodoItem) = dao.add(item)
+
+    /**
+     * Обновляет элемент списка задач.
+     *
+     * @param item Элемент для обновления.
+     */
+    suspend fun update(item: TodoItem) = dao.update(item)
+
+    /**
+     * Удаляет элемент списка задач.
+     *
+     * @param item Элемент для удаления.
+     */
+    suspend fun delete(item: TodoItem) = dao.delete(item)
+
+    /**
+     * Очищает таблицу элементов списка задач и вставляет новые элементы.
+     *
+     * @param items Список элементов для вставки.
+     */
+    suspend fun clearAndInsertAllItems(items: List<TodoItem>) {
+        dao.deleteAll()
+        dao.insertAll(items)
     }
 
     /**
-     * Возвращает поток, содержащий список задач.
+     * Выполняет сетевой запрос и обрабатывает результат.
      *
-     * @return Поток, содержащий список задач.
+     * @param apiCall Функция для выполнения сетевого запроса.
+     * @return Результат сетевого запроса в виде [NetworkResult].
      */
-    fun getTodoItems(): Flow<List<TodoItem>> {
-        return todoItemsFlow
-    }
+    suspend inline fun executeNetworkRequest(crossinline apiCall: suspend () -> ApiEntity): NetworkResult<ApiEntity> {
+        return try {
+            // Выполняем сетевой запрос, вызывая переданную функцию apiCall
+            val response = apiCall()
+            // Обновляем значение переменной revision на основе значения response.revision
+            revision = response.revision ?: revision
+            // Возвращаем результат успешного выполнения запроса в виде объекта NetworkResult.Success
+            NetworkResult.Success(response)
+        } catch (e: HttpException) {
+            // Обработка исключения типа HttpException, которое может возникнуть при выполнении запроса
+            val errorMessage = when (e.code()) {
+                400 -> "Неправильно сформирован запрос"
+                401 -> "Неверная авторизация"
+                404 -> "Такой элемент на сервере не найден"
+                in 500..599 -> "Ошибка сервера"
+                else -> "Неизвестная ошибка"
+            }
 
-    /**
-     * Возвращает элемент TodoItem по указанной позиции в списке задач.
-     *
-     * @param position Позиция элемента в списке задач.
-     * @return Элемент TodoItem.
-     */
-    fun getTodoItem(position: Int): TodoItem{
-        return todoItems[position]
-    }
-
-    /**
-     * Добавляет новый элемент TodoItem в список задач или обновляет существующий элемент с указанным ID.
-     *
-     * @param todoItem Элемент TodoItem для добавления или обновления.
-     */
-    fun addTodoItem(todoItem: TodoItem) {
-        // Если у задачи нет ID ("-1"), генерируем и присваиваем ей новый ID
-        if (todoItem.id == "-1") {
-            todoItem.id = todoItems.size.toString()
-            todoItems.add(todoItem)
+            // Возвращаем результат выполнения запроса с ошибкой в виде объекта
+            NetworkResult.Error(errorMessage, e)
+            // Обработка исключения типа UnknownHostException, возникающего при проблемах с сетевым подключением
+        } catch (e: UnknownHostException) {
+            NetworkResult.Error("Кажется, какие-то проблемы с сетью\nИдёт работа с локальным хранилищем", e)
         }
-        else {
-            // Если у задачи уже есть ID, обновляем задачу в списке по соответствующему ID
-            todoItems[todoItem.id.toInt()] = todoItem
+        // Обработка других исключений, которые могут возникнуть при выполнении запроса
+        catch (e: Exception) {
+            val errorMessage = "Неизвестная ошибка: ${e.message}"
+            NetworkResult.Error(errorMessage, e)
         }
-        // Обновляем значение потока (дальше также)
-        todoItemsFlow.value = todoItems.toMutableList()
-    }
-
-
-    /**
-     * Удаляет указанный элемент TodoItem из списка задач.
-     *
-     * @param item Элемент TodoItem для удаления.
-     */
-    fun deleteTodoItem(item: TodoItem) {
-        todoItems.remove(item)
-        todoItemsFlow.value = todoItems.toMutableList()
     }
 
     /**
-     * Изменяет состояние поля isDone (выполнения задачи) по указанной позиции в списке задач.
+     * Получает все элементы списка задач из удаленного источника данных.
      *
-     * @param position Позиция элемента в списке задач.
+     * @return Результат запроса в виде [NetworkResult].
      */
-    fun checkTodoItem(position: Int) {
-        // Инвертируем флаг выполнения задачи
-        todoItems[position].isDone = !todoItems[position].isDone
-        todoItemsFlow.value = todoItems.toMutableList()
+    suspend fun getAllItemsFromBack(): NetworkResult<ApiEntity> {
+        Log.d("Repository_CLASS", "getAllItemsFromBack")
+        return executeNetworkRequest { todoItemsApiService.getTodoItems() }
     }
 
     /**
-     * Возвращает количество выполненных задач в списке.
+     * Отправляет все элементы списка задач на удаленный сервер.
      *
-     * @return Количество выполненных задач.
+     * @param newItems Список новых элементов для отправки.
+     * @return Результат запроса в виде [NetworkResult].
      */
-    fun getCheckedItemCount(): Int {
-        // Подсчитываем количество выполненных задач в списке
-        return todoItems.filter { it.isDone }.size
+    suspend fun postAllItemsOnBack(newItems: List<TodoItem>): NetworkResult<ApiEntity> =
+        executeNetworkRequest { todoItemsApiService.updateTodoItems(revision, ApiEntity(null, null, newItems, revision)) }
+
+    /**
+     * Получает элемент списка задач по его идентификатору из удаленного источника данных.
+     *
+     * @param id Идентификатор элемента.
+     * @return Результат запроса в виде [NetworkResult].
+     */
+    suspend fun getItemByIdFromBack(id: String): NetworkResult<ApiEntity> =
+        executeNetworkRequest { todoItemsApiService.getTodoItem(id) }
+
+    /**
+     * Отправляет новый элемент списка задач на удаленный сервер.
+     *
+     * @param newItem Новый элемент для отправки.
+     * @return Результат запроса в виде [NetworkResult].
+     */
+    suspend fun postItemOnBack(newItem: TodoItem): NetworkResult<ApiEntity> =
+        executeNetworkRequest { todoItemsApiService.postTodoItem(revision, ApiEntity(null, newItem, null, null)) }
+
+    /**
+     * Обновляет элемент списка задач на удаленном сервере.
+     *
+     * @param item Элемент для обновления.
+     * @return Результат запроса в виде [NetworkResult].
+     */
+    suspend fun putItemOnBack(item: TodoItem): NetworkResult<ApiEntity> =
+        executeNetworkRequest { todoItemsApiService.putTodoItem(revision, item.id.toString(), ApiEntity(null, item, null, null)) }
+
+    /**
+     * Удаляет элемент списка задач на удаленном сервере.
+     *
+     * @param id Идентификатор элемента для удаления.
+     * @return Результат запроса в виде [NetworkResult].
+     */
+    suspend fun deleteItemOnBack(id: String): NetworkResult<ApiEntity> =
+        executeNetworkRequest { todoItemsApiService.deleteTodoItem(revision, id) }
+
+    /**
+     * Добавляет элемент списка задач и отправляет его на удаленный сервер.
+     *
+     * @param item Элемент для добавления.
+     * @return Результат запроса в виде [NetworkResult].
+     */
+    suspend fun addItem(item: TodoItem): NetworkResult<ApiEntity> {
+        add(item)
+        return postItemOnBack(item)
     }
 
     /**
-     * Удаляет элемент TodoItem из списка задач по указанному индексу.
+     * Обновляет элемент списка задач и отправляет его на удаленный сервер.
      *
-     * @param ind Индекс элемента для удаления.
+     * @param item Элемент для обновления.
+     * @return Результат запроса в виде [NetworkResult].
      */
-    fun deleteTodoItemByInd(ind: Int) {
-        todoItems.removeAt(ind)
-        todoItemsFlow.value = todoItems.toMutableList()
+    suspend fun updateItem(item: TodoItem): NetworkResult<ApiEntity> {
+        update(item)
+        return putItemOnBack(item)
     }
 
     /**
-     * Возвращает общее количество задач в списке.
+     * Удаляет элемент списка задач и отправляет запрос на удаление на удаленный сервер.
      *
-     * @return Общее количество задач.
+     * @param item Элемент для удаления.
+     * @return Результат запроса в виде [NetworkResult].
      */
-    fun getTodosCount(): Int = todoItems.size
+    suspend fun deleteItem(item: TodoItem): NetworkResult<ApiEntity> {
+        delete(item)
+        return deleteItemOnBack(item.id.toString())
+    }
+
+    /**
+     * Обновляет значение переменной `revision` из удаленного источника данных.
+     */
+    suspend fun refreshRevision() {
+        CoroutineScope(Dispatchers.IO).launch {
+            revision = when (val result = getAllItemsFromBack()) {
+                is NetworkResult.Success -> result.data.revision!!
+                else -> -1
+            }
+        }
+    }
 }

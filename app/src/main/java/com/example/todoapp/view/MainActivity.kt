@@ -1,53 +1,92 @@
 package com.example.todoapp.view
 
-import androidx.appcompat.app.AppCompatActivity
+import android.app.job.JobInfo
+import android.app.job.JobScheduler
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Window
 import android.view.WindowManager
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager
-import com.example.todoapp.App
+import androidx.lifecycle.ViewModelProvider
 import com.example.todoapp.R
+import com.example.todoapp.databinding.ActivityMainBinding
 import com.example.todoapp.model.TodoItem
+import com.example.todoapp.model.UpdateDataWorker
+import com.example.todoapp.retrofit.NetworkSchedulerService
 import com.example.todoapp.utils.Navigator
+import com.example.todoapp.viewmodel.SharedViewModel
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 
 /**
  * Основная активность приложения, реализующая навигацию между фрагментами и операции с элементами списка дел.
  */
 class MainActivity : AppCompatActivity(), Navigator {
+    private lateinit var sharedViewModel: SharedViewModel
+    private lateinit var binding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+
+        // Создание экземпляра привязки для разметки activity_main.xml
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // Получение экземпляра SharedViewModel с использованием ViewModelProvider
+        sharedViewModel = ViewModelProvider(this)[SharedViewModel::class.java]
+
         // Настройка цвета системной панели
         val window: Window = window
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         window.statusBarColor = ContextCompat.getColor(this, R.color.back_primary)
+
+        // Добавление фрагмента TodoListFragment при первом создании активности
         if (savedInstanceState == null) {
-            // Добавление фрагмента TodoListFragment при первом создании активности
             supportFragmentManager.beginTransaction()
-                .add(R.id.container, TodoListFragment())
+                .add(binding.container.id, TodoListFragment())
                 .commit()
         }
+
         // Обработка нажатия на плавающую кнопку "Добавить"
-        findViewById<FloatingActionButton>(R.id.floatingActionButton).setOnClickListener {
-            showDetails(-1)
+        binding.floatingActionButton.setOnClickListener {
+            showDetails(null)
         }
+
         // Скрытие плавающей кнопки "Добавить", если текущий фрагмент - CreateEditFragment (при пересоздании экрана)
         if (supportFragmentManager.findFragmentById(R.id.container) != null &&
             supportFragmentManager.findFragmentById(R.id.container) is CreateEditFragment){
             findViewById<FloatingActionButton>(R.id.floatingActionButton).hide()
         }
+
+        // Наблюдение за изменениями в LiveData todoItemProcess
+        sharedViewModel.todoItemProcess.observe(this) { event ->
+            Log.d("MainActivity", event.peekContent())
+
+            // Получение и обработка события, если оно не было обработано ранее
+            event.getContentIfNotHandled()?.let { result ->
+                Snackbar.make(binding.root, result, Snackbar.LENGTH_LONG).show()
+            }
+        }
+
+        // Запуск планировщика задач
+        scheduleJob()
     }
 
     /**
      * Отображает фрагмент для создания/редактирования элемента списка дел.
-     * @param n Индекс элемента, который нужно редактировать (-1 для создания нового элемента).
+     * @param todoItem элемент, который нужно редактировать.
      */
-    override fun showDetails(n: Int) {
-        findViewById<FloatingActionButton>(R.id.floatingActionButton).hide()
+    override fun showDetails(todoItem: TodoItem?) {
+        binding.floatingActionButton.hide()
+
+        // Замена текущего фрагмента на CreateEditFragment для создания/редактирования элемента
         supportFragmentManager.beginTransaction()
-            .replace(R.id.container, CreateEditFragment.newInstance(n))
+            .replace(R.id.container, CreateEditFragment.newInstance(todoItem))
             .addToBackStack(null)
             .commit()
     }
@@ -56,15 +95,40 @@ class MainActivity : AppCompatActivity(), Navigator {
      * Отображает список элементов и показывает плавающую кнопку "Добавить".
      */
     override fun showList() {
-        findViewById<FloatingActionButton>(R.id.floatingActionButton).show()
+        binding.floatingActionButton.show()
+
+        // Удаление фрагментов из back stack, чтобы показать список элементов
         supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
     }
 
     /**
-     * Сохраняет элемент списка дел.
-     * @param todoItem Элемент списка дел.
+     * Планирует выполнение задачи через JobScheduler.
      */
-    override fun saveTodoItems(todoItem: TodoItem) {
-        App.todoItemsRepository.addTodoItem(todoItem)
+    private fun scheduleJob() {
+        val myJob = JobInfo.Builder(0, ComponentName(this, NetworkSchedulerService::class.java))
+            .setRequiresCharging(true)
+            .setMinimumLatency(1000)
+            .setOverrideDeadline(2000)
+            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+            .setPersisted(true)
+            .build()
+
+        val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+        jobScheduler.schedule(myJob)
+    }
+
+    override fun onStop() {
+        // Остановка службы NetworkSchedulerService при остановке активности
+        stopService(Intent(this, NetworkSchedulerService::class.java))
+        super.onStop()
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        // Запуск службы NetworkSchedulerService и запланированной работы UpdateDataWorker
+        val startServiceIntent = Intent(this, NetworkSchedulerService::class.java)
+        startService(startServiceIntent)
+        UpdateDataWorker.enqueuePeriodicWork()
     }
 }

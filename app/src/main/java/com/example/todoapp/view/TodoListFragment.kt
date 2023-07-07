@@ -1,11 +1,9 @@
 package com.example.todoapp.view
 
-import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.*
-import androidx.core.content.res.ResourcesCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
@@ -14,10 +12,13 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.todoapp.R
+import com.example.todoapp.databinding.FragmentCreateEditBinding
 import com.example.todoapp.databinding.FragmentTodoListBinding
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.utils.navigator
 import com.example.todoapp.viewmodel.TodoListViewModel
+import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -25,9 +26,10 @@ import kotlinx.coroutines.launch
  */
 class TodoListFragment : Fragment(), AdapterListener {
     private lateinit var todoListViewModel: TodoListViewModel
-    private lateinit var binding: FragmentTodoListBinding
+    private var _binding: FragmentTodoListBinding? = null
+    private val binding get() = _binding!!
     private lateinit var todoItemAdapter: TodoItemAdapter
-    private var hideReady = false
+    private var jobs: MutableList<Job> = mutableListOf()
 
     /**
      * Создает и возвращает представление фрагмента.
@@ -42,7 +44,7 @@ class TodoListFragment : Fragment(), AdapterListener {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentTodoListBinding.inflate(inflater, container, false)
+        _binding = FragmentTodoListBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -68,29 +70,35 @@ class TodoListFragment : Fragment(), AdapterListener {
         touchHelper.attachToRecyclerView(binding.todosView)
         // Получение экземпляра ViewModel для управления списком задач
         todoListViewModel = ViewModelProvider(this)[TodoListViewModel::class.java]
+
+        todoListViewModel.showSnackbarEvent.observe(viewLifecycleOwner) { event ->
+            event.getContentIfNotHandled()?.let { errorMessage ->
+                Snackbar.make(view, errorMessage, Snackbar.LENGTH_LONG).show()
+            }
+        }
+
         // Запуск наблюдателя жизненного цикла фрагмента для отслеживания изменений в списке задач
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                Log.d("NetworkSchedulerService", "UPDATE_VIEW")
                 todoListViewModel.todoItems.collect {
                     todoItemAdapter.updateItems(it)
+                    binding.subtitle.text = getString(R.string.rdy_count)
+                        .format(it.count { item -> item.isDone }, it.size)
                 }
             }
         }
-        // Загрузка списка задач
-        todoListViewModel.loadTodoItems()
 
         // Настройка слушателя изменения состояния панели приложения
         binding.appbarLayout.addOnOffsetChangedListener { appBar, offset ->
             val seekPosition = -offset / appBar.totalScrollRange.toFloat()
             binding.motionLayout.progress = seekPosition
         }
-        // Установка текста подзаголовка с количеством выполненных задач
-        binding.subtitle.text = getString(R.string.rdy_count)
-            .format(todoListViewModel.getCheckedItemCount(), todoListViewModel.getTodosCount())
 
-        // понятия не имею что тут нужно
-        binding.showRdyIcon.setOnClickListener {
-
+        // Пусть будет refresh пока вместо глазика
+        binding.refreshBtn.setOnClickListener {
+            todoListViewModel.fetchData()
         }
     }
 
@@ -100,26 +108,26 @@ class TodoListFragment : Fragment(), AdapterListener {
      */
     override fun onTodoItemDeleted(item: TodoItem) {
         todoListViewModel.deleteTodoItem(item)
-        binding.subtitle.text = getString(R.string.rdy_count)
-            .format(todoListViewModel.getCheckedItemCount(), todoListViewModel.getTodosCount())
     }
 
     /**
      * Вызывается при отметке задачи.
      * @param position Позиция отмеченной задачи.
      */
-    override fun onTodoItemChecked(position: Int) {
-        todoListViewModel.checkTodoItem(position)
-        binding.subtitle.text = getString(R.string.rdy_count)
-            .format(todoListViewModel.getCheckedItemCount(), todoListViewModel.getTodosCount())
-
+    override fun onTodoItemChecked(item: TodoItem) {
+        todoListViewModel.updateTodoItem(item)
     }
 
     /**
      * Вызывается при нажатии на кнопку редактирования.
      * @param position Позиция задачи для редактирования.
      */
-    override fun onEditClicked(position: Int) {
-        navigator().showDetails(position)
+    override fun onEditClicked(todoItem: TodoItem) {
+        navigator().showDetails(todoItem)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

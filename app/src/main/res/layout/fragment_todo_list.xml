@@ -46,11 +46,11 @@
                 android:textColor="@color/label_tertiary" />
 
             <CheckBox
-                android:id="@+id/show_rdy_icon"
+                android:id="@+id/refresh_btn"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginEnd="28dp"
-                android:button="@drawable/hide_checked"
+                android:button="@drawable/baseline_refresh_24"
                 android:checked="true"
                 app:buttonTint="@color/blue"
                 app:layout_constraintBottom_toBottomOf="@id/subtitle"
