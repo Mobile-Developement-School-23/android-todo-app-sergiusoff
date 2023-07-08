@@ -84,8 +84,8 @@ class UpdateDataWorker @Inject constructor(
 
             // Создание периодического запроса работы
             val periodicWorkRequest = PeriodicWorkRequestBuilder<UpdateDataWorker>(
-                repeatInterval = 1,
-                repeatIntervalTimeUnit = TimeUnit.MINUTES
+                repeatInterval = 8,
+                repeatIntervalTimeUnit = TimeUnit.HOURS
             )
                 .setConstraints(constraints)
                 .build()
