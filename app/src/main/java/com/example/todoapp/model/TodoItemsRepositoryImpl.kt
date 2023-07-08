@@ -9,6 +9,7 @@ import com.example.todoapp.retrofit.model.NetworkResult
 import com.example.todoapp.retrofit.TodoItemsApiService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -32,7 +33,6 @@ class TodoItemsRepositoryImpl @Inject constructor(
     private var sharedPreferences: SharedPreferences =
         context.getSharedPreferences("todoItemApp", Context.MODE_PRIVATE)
 
-    var firstError: Boolean = true
     var revision: Int = 42
     private val dao get() = db.itemsDao
 
@@ -81,34 +81,48 @@ class TodoItemsRepositoryImpl @Inject constructor(
      * @return Результат сетевого запроса в виде [NetworkResult].
      */
     suspend inline fun executeNetworkRequest(crossinline apiCall: suspend () -> ApiEntity): NetworkResult<ApiEntity> {
-        return try {
-            // Выполняем сетевой запрос, вызывая переданную функцию apiCall
-            val response = apiCall()
-            // Обновляем значение переменной revision на основе значения response.revision
-            revision = response.revision ?: revision
-            // Возвращаем результат успешного выполнения запроса в виде объекта NetworkResult.Success
-            firstError = true
-            NetworkResult.Success(response)
-        } catch (e: HttpException) {
-            // Обработка исключения типа HttpException, которое может возникнуть при выполнении запроса
-            val errorMessage = when (e.code()) {
-                400 -> "Неправильно сформирован запрос"
-                401 -> "Неверная авторизация"
-                404 -> "Такой элемент на сервере не найден"
-                in 500..599 -> "Ошибка сервера"
-                else -> "Неизвестная ошибка"
+        var i = 0
+        var result: NetworkResult<ApiEntity>
+        // Защита от одновременного изменения с нескольких устройств
+        // (запрос свежей ревизии в случае неудачи)
+        do {
+            result = try {
+                // Выполняем сетевой запрос, вызывая переданную функцию apiCall
+                val response = apiCall()
+                // Обновляем значение переменной revision на основе значения response.revision
+                revision = response.revision ?: revision
+                // Возвращаем результат успешного выполнения запроса в виде объекта NetworkResult.Success
+                NetworkResult.Success(response)
+            } catch (e: HttpException) {
+                // Обработка исключения типа HttpException, которое может возникнуть при выполнении запроса
+                val errorMessage = when (e.code()) {
+                    400 -> "Неправильно сформирован запрос"
+                    401 -> "Неверная авторизация"
+                    404 -> "Такой элемент на сервере не найден"
+                    in 500..599 -> "Ошибка сервера"
+                    else -> "Неизвестная ошибка"
+                }
+                try {
+                    refreshRevision()
+                    delay(100)
+                } catch (_: java.lang.Exception) {
+                }
+                // Возвращаем результат выполнения запроса с ошибкой в виде объекта
+                NetworkResult.Error(errorMessage, e)
+                // Обработка исключения типа UnknownHostException, возникающего при проблемах с сетевым подключением
+            } catch (e: UnknownHostException) {
+                NetworkResult.Error(
+                    "Кажется, какие-то проблемы с сетью\nИдёт работа с локальным хранилищем",
+                    e
+                )
             }
-            // Возвращаем результат выполнения запроса с ошибкой в виде объекта
-            NetworkResult.Error(errorMessage, e)
-            // Обработка исключения типа UnknownHostException, возникающего при проблемах с сетевым подключением
-        } catch (e: UnknownHostException) {
-            NetworkResult.Error("Кажется, какие-то проблемы с сетью\nИдёт работа с локальным хранилищем", e)
-        }
-        // Обработка других исключений, которые могут возникнуть при выполнении запроса
-        catch (e: Exception) {
-            val errorMessage = "Неизвестная ошибка: ${e.message}"
-            NetworkResult.Error(errorMessage, e)
-        }
+            // Обработка других исключений, которые могут возникнуть при выполнении запроса
+            catch (e: Exception) {
+                val errorMessage = "Неизвестная ошибка: ${e.message}"
+                NetworkResult.Error(errorMessage, e)
+            }
+        } while (result !is NetworkResult.Success && i++ < 2)
+        return result
     }
 
     /**
