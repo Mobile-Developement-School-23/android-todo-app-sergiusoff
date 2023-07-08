@@ -4,8 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import com.example.todoapp.database.TodoItemsDatabase
-import com.example.todoapp.retrofit.ApiEntity
-import com.example.todoapp.retrofit.NetworkResult
+import com.example.todoapp.retrofit.model.ApiEntity
+import com.example.todoapp.retrofit.model.NetworkResult
 import com.example.todoapp.retrofit.TodoItemsApiService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,26 +37,28 @@ class TodoItemsRepositoryImpl @Inject constructor(
     private val dao get() = db.itemsDao
 
     /**
-     * Возвращает все элементы списка задач в виде `Flow`.
+     * Возвращает все элементы списка задач из БД в виде `Flow`.
+     *
+     * @return `Flow` со списком элементов `TodoItem`.
      */
     override fun getAll(): Flow<List<TodoItem>> = dao.getAll()
 
     /**
-     * Добавляет новый элемент списка задач.
+     * Добавляет новый элемент списка задач в БД.
      *
      * @param item Новый элемент для добавления.
      */
     override suspend fun add(item: TodoItem) = dao.add(item)
 
     /**
-     * Обновляет элемент списка задач.
+     * Обновляет элемент списка задач в БД.
      *
      * @param item Элемент для обновления.
      */
     override suspend fun update(item: TodoItem) = dao.update(item)
 
     /**
-     * Удаляет элемент списка задач.
+     * Удаляет элемент списка задач в БД.
      *
      * @param item Элемент для удаления.
      */
@@ -79,14 +81,11 @@ class TodoItemsRepositoryImpl @Inject constructor(
      * @return Результат сетевого запроса в виде [NetworkResult].
      */
     suspend inline fun executeNetworkRequest(crossinline apiCall: suspend () -> ApiEntity): NetworkResult<ApiEntity> {
-        Log.d("UPDATE_ITEM_REPO_IMPL_revision_1", "$revision")
         return try {
             // Выполняем сетевой запрос, вызывая переданную функцию apiCall
             val response = apiCall()
-            Log.d("UPDATE_ITEM_REPO_IMPL_revision_2", "$revision")
             // Обновляем значение переменной revision на основе значения response.revision
             revision = response.revision ?: revision
-            Log.d("UPDATE_ITEM_REPO_IMPL_revision_3", "$revision")
             // Возвращаем результат успешного выполнения запроса в виде объекта NetworkResult.Success
             firstError = true
             NetworkResult.Success(response)

@@ -1,99 +1,82 @@
 package com.example.todoapp.di
 
 import android.content.Context
-import androidx.room.Room
-import com.example.todoapp.database.TodoItemsDatabase
-import com.example.todoapp.model.DaggerWorkerFactory
-import com.example.todoapp.model.TodoItem
-import com.example.todoapp.model.TodoItemsRepository
-import com.example.todoapp.model.TodoItemsRepositoryImpl
-import com.example.todoapp.model.UpdateDataWorker
-import com.example.todoapp.retrofit.ApiEntity
-import com.example.todoapp.retrofit.ApiResponseSerializer
-import com.example.todoapp.retrofit.NetworkSchedulerService
-import com.example.todoapp.retrofit.TodoItemSerializer
-import com.example.todoapp.retrofit.TodoItemsApiService
-import com.example.todoapp.utils.DataSynchronizer
-import com.example.todoapp.view.CreateEditFragment
-import com.example.todoapp.view.MainActivity
-import com.example.todoapp.view.TodoListFragment
-import com.google.gson.GsonBuilder
-import dagger.Binds
+import com.example.todoapp.database.DBModule
+import com.example.todoapp.utils.worker.DaggerWorkerFactory
+import com.example.todoapp.utils.worker.UpdateDataWorker
+import com.example.todoapp.retrofit.NetworkModule
+import com.example.todoapp.utils.changeNetworkState.NetworkSchedulerService
+import com.example.todoapp.utils.worker.WorkerSubcomponent
+import com.example.todoapp.ui.view.CreateEditFragment
+import com.example.todoapp.ui.view.MainActivity
+import com.example.todoapp.ui.view.TodoListFragment
 import dagger.BindsInstance
 import dagger.Component
-import dagger.Module
-import dagger.Provides
-import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import javax.inject.Scope
-import javax.inject.Singleton
 
-@Scope
-annotation class AppScope
-
+/**
+ * Компонент Dagger, отвечающий за инъекцию зависимостей в приложение.
+ */
 @AppScope
-@Component(modules = [AppModule::class])
+@Component(modules = [DBModule::class, NetworkModule::class, AppBindModule::class])
 interface AppComponent {
+    /**
+     * Метод для инъекции зависимостей в `MainActivity`.
+     */
     fun inject(mainActivity: MainActivity)
+
+    /**
+     * Метод для инъекции зависимостей в `CreateEditFragment`.
+     */
     fun inject(createEditFragment: CreateEditFragment)
+
+    /**
+     * Метод для инъекции зависимостей в `TodoListFragment`.
+     */
     fun inject(todoListFragment: TodoListFragment)
+
+    /**
+     * Метод для инъекции зависимостей в `NetworkSchedulerService`.
+     */
     fun inject(networkSchedulerService: NetworkSchedulerService)
+
+    /**
+     * Метод для инъекции зависимостей в `UpdateDataWorker`.
+     */
     fun inject(updateDataWorker: UpdateDataWorker)
 
+    /**
+     * Метод для создания `DaggerWorkerFactory` - кастомной фабрики для Worker.
+     *
+     * @return Экземпляр `DaggerWorkerFactory`.
+     */
     fun daggerWorkerFactory(): DaggerWorkerFactory
 
+    /**
+     * Метод для получения билдера подкомпонента `WorkerSubcomponent`.
+     *
+     * @return Билдер для подкомпонента `WorkerSubcomponent`.
+     */
     fun workerSubcomponentBuilder(): WorkerSubcomponent.Builder
 
+    /**
+     * Билдер для компонента `AppComponent`.
+     */
     @Component.Builder
     interface Builder {
+        /**
+         * Метод для установки контекста приложения.
+         *
+         * @param context Контекст приложения.
+         * @return Экземпляр билдера.
+         */
         @BindsInstance
         fun context(context: Context): Builder
+
+        /**
+         * Метод для создания экземпляра `AppComponent`.
+         *
+         * @return Экземпляр `AppComponent`.
+         */
         fun build(): AppComponent
     }
-}
-
-@Module(includes = [NetworkModule::class, AppBindModule::class])
-class AppModule{
-
-    @Provides
-    fun provideDatabase(context: Context): TodoItemsDatabase {
-        return Room.databaseBuilder(
-            context,
-            TodoItemsDatabase::class.java,
-            "todoItemsDatabase"
-        ).build()
-    }
-}
-
-@Module
-class NetworkModule{
-    @Provides
-    fun provideTodoItemService(): TodoItemsApiService {
-        return Retrofit.Builder()
-            .baseUrl("https://beta.mrdekk.ru/todobackend/")
-            .addConverterFactory(
-                GsonConverterFactory.create(
-                    GsonBuilder()
-                        .registerTypeAdapter(TodoItem::class.java, TodoItemSerializer())
-                        .registerTypeAdapter(ApiEntity::class.java, ApiResponseSerializer())
-                        .create()))
-            .client(OkHttpClient.Builder().addInterceptor { chain ->
-                val modifiedRequest = chain.request().newBuilder()
-                    .header("Authorization", "Bearer agouara")
-                    .build()
-                chain.proceed(modifiedRequest)
-            }.build())
-            .build()
-            .create(TodoItemsApiService::class.java)
-    }
-}
-
-@Module
-interface AppBindModule {
-    @Binds
-    @AppScope
-    fun bindTodoItemsRepository(
-        todoItemsRepositoryImpl: TodoItemsRepositoryImpl
-    ): TodoItemsRepository
 }

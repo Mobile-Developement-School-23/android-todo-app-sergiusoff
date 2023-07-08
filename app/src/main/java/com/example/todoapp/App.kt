@@ -30,7 +30,8 @@ class App : Application() {
             .build()
 
         WorkManager.initialize(this, Configuration.Builder().run {
-            setWorkerFactory(appComponent.daggerWorkerFactory())
+            setWorkerFactory(appComponent.
+            daggerWorkerFactory())
             build()
         })
     }
