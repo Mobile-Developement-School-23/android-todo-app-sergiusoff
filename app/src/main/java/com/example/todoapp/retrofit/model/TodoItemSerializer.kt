@@ -1,4 +1,4 @@
-package com.example.todoapp.retrofit
+package com.example.todoapp.retrofit.model
 
 import com.example.todoapp.model.Importance
 import com.example.todoapp.model.TodoItem

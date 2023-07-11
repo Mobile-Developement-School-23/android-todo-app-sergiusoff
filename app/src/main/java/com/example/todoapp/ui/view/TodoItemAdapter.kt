@@ -1,4 +1,4 @@
-package com.example.todoapp.view
+package com.example.todoapp.ui.view
 
 import android.content.Context
 import android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
@@ -26,6 +26,75 @@ import java.util.*
  */
 class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context: Context) :
     RecyclerView.Adapter<TodoItemAdapter.TodoItemViewHolder>(), ItemTouchSwapable {
+
+    private var adapterListener: AdapterListener? = null
+
+    /**
+     * Устанавливает слушатель для элементов адаптера.
+     * @param listener Слушатель элементов адаптера.
+     */
+    fun setTodoItemListener(listener: AdapterListener) {
+        adapterListener = listener
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TodoItemViewHolder {
+        // Создаем и возвращаем ViewHolder, содержащий представление элемента списка
+        return TodoItemViewHolder(
+            view = LayoutInflater.from(parent.context).inflate(R.layout.todo_item, parent, false)
+        )
+    }
+
+    override fun onBindViewHolder(holder: TodoItemViewHolder, position: Int) {
+        // Вызываем метод bind() ViewHolder'а для связывания данных с представлением элемента списка
+        holder.bind(todoItems[position])
+    }
+
+    override fun getItemCount(): Int = todoItems.size
+
+    /**
+     * Обновляет список элементов дел. Так как используется ТОЛЬКО при создании фрагмента,
+     * подгружая данные с ToDoItemsrepository используется "ужасный" notifyDataSetChanged()
+     * @param newTodoItems Новый список элементов дел.
+     */
+    fun updateItems(newTodoItems: List<TodoItem>) {
+        todoItems = newTodoItems
+        notifyDataSetChanged()
+    }
+
+    /**
+     * Вызывается, когда элемент удаляется.
+     * @param position Позиция удаляемого элемента.
+     */
+    override fun onItemDismiss(position: Int) = deleteItem(position)
+    /**
+     * Вызывается, когда элемент отмечен.
+     * @param position Позиция отмеченного элемента.
+     */
+    override fun onItemChecked(position: Int) = checkItem(position)
+
+    /**
+    * Удаляет элемент из списка по указанной позиции.
+    * @param position Позиция элемента, который должен быть удален.
+     */
+    private fun deleteItem(position: Int) {
+        if (position >= 0) {
+            adapterListener?.onTodoItemDeleted(todoItems[position])
+            notifyItemRemoved(position)
+        }
+    }
+
+    /**
+     * Помечает элемент как отмеченный по указанной позиции.
+     * @param position Позиция элемента, который должен быть отмечен.
+     */
+    private fun checkItem(position: Int) {
+        if (position >= 0) {
+            todoItems[position].isDone = !todoItems[position].isDone
+            adapterListener?.onTodoItemChecked(todoItems[position])
+            notifyItemChanged(position)
+        }
+    }
+
     /**
      * ViewHolder для элементов списка дел.
      * @param view Представление элемента списка.
@@ -167,74 +236,6 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
             binding.root.setOnClickListener { adapterListener?.onEditClicked(todoItem) }
             binding.root.setOnLongClickListener { showMenu(adapterPosition, binding.info)
                 true }
-        }
-    }
-
-    private var adapterListener: AdapterListener? = null
-
-    /**
-     * Устанавливает слушатель для элементов адаптера.
-     * @param listener Слушатель элементов адаптера.
-     */
-    fun setTodoItemListener(listener: AdapterListener) {
-        adapterListener = listener
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TodoItemViewHolder {
-        // Создаем и возвращаем ViewHolder, содержащий представление элемента списка
-        return TodoItemViewHolder(
-            view = LayoutInflater.from(parent.context).inflate(R.layout.todo_item, parent, false)
-        )
-    }
-
-    override fun onBindViewHolder(holder: TodoItemViewHolder, position: Int) {
-        // Вызываем метод bind() ViewHolder'а для связывания данных с представлением элемента списка
-        holder.bind(todoItems[position])
-    }
-
-    override fun getItemCount(): Int = todoItems.size
-
-    /**
-     * Обновляет список элементов дел. Так как используется ТОЛЬКО при создании фрагмента,
-     * подгружая данные с ToDoItemsrepository используется "ужасный" notifyDataSetChanged()
-     * @param newTodoItems Новый список элементов дел.
-     */
-    fun updateItems(newTodoItems: List<TodoItem>) {
-        todoItems = newTodoItems
-        notifyDataSetChanged()
-    }
-
-    /**
-     * Вызывается, когда элемент удаляется.
-     * @param position Позиция удаляемого элемента.
-     */
-    override fun onItemDismiss(position: Int) = deleteItem(position)
-    /**
-     * Вызывается, когда элемент отмечен.
-     * @param position Позиция отмеченного элемента.
-     */
-    override fun onItemChecked(position: Int) = checkItem(position)
-
-    /**
-    * Удаляет элемент из списка по указанной позиции.
-    * @param position Позиция элемента, который должен быть удален.
-     */
-    private fun deleteItem(position: Int) {
-        if (position >= 0) {
-            adapterListener?.onTodoItemDeleted(todoItems[position])
-            notifyItemRemoved(position)
-        }
-    }
-
-    /**
-     * Помечает элемент как отмеченный по указанной позиции.
-     * @param position Позиция элемента, который должен быть отмечен.
-     */
-    private fun checkItem(position: Int) {
-        if (position >= 0) {
-            todoItems[position].isDone = !todoItems[position].isDone
-            adapterListener?.onTodoItemChecked(todoItems[position])
-            notifyItemChanged(position)
         }
     }
 }

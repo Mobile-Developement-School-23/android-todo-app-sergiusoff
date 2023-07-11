@@ -1,5 +1,6 @@
-package com.example.todoapp.view
+package com.example.todoapp.ui.view
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -7,33 +8,29 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
+import com.example.todoapp.appComponent
 import com.example.todoapp.databinding.FragmentCreateEditBinding
 import com.example.todoapp.model.Importance
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.utils.navigator
-import com.example.todoapp.viewmodel.CreateEditViewModel
-import com.example.todoapp.viewmodel.SharedViewModel
+import com.example.todoapp.ioc.CreateEditViewModelFactory
+import com.example.todoapp.ui.stateholders.CreateEditViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.inject.Inject
 
 /**
  * Фрагмент для создания и редактирования элемента списка задач.
  */
 class CreateEditFragment : Fragment() {
-    private val sharedViewModel: SharedViewModel by lazy {
-        ViewModelProvider(requireActivity())[SharedViewModel::class.java]
-    }
-    //    binding упрощает доступ к представлениям и повышает безопасность кода,
-    //    предотвращая возможные ошибки NullPointerException при использовании _binding.
-
+    // binding упрощает доступ к представлениям и повышает безопасность кода,
+    // предотвращая возможные ошибки NullPointerException при использовании _binding.
     // хранение привязки (binding) фрагмента
     private var _binding: FragmentCreateEditBinding? = null
     // свойство-делегат, которое обеспечивает доступ к привязке фрагмента
     private val binding get() = _binding!!
-    private lateinit var createEditViewModel: CreateEditViewModel
-
 
     // Целочисленное значение, переданное через аргументы фрагмента (см. onCreate()) необходимое для проверки новый/старый объект дела.
     private var tempItem: TodoItem? = null
@@ -42,6 +39,19 @@ class CreateEditFragment : Fragment() {
     }
     private var deadlineDate: Date? = null
     private lateinit var creationDate: Date
+
+
+    private val createEditViewModel: CreateEditViewModel by viewModels {
+        factory.create(tempItem?:TodoItem(UUID.randomUUID(), "", Importance.LOW, Date(), false, Date(), Date()))
+    }
+
+    override fun onAttach(context: Context) {
+        context.appComponent.inject(this)
+        super.onAttach(context)
+    }
+
+    @Inject
+    lateinit var factory: CreateEditViewModelFactory.Factory
     companion object {
         private const val ARG_MY_ITEM = "arg_my_int"
 
@@ -83,69 +93,84 @@ class CreateEditFragment : Fragment() {
         _binding = FragmentCreateEditBinding.inflate(inflater, container, false)
         val view = binding.root
         creationDate = Date()
-        ViewModelProvider(this)[CreateEditViewModel::class.java].sharedViewModel = sharedViewModel
-        createEditViewModel = ViewModelProvider(this)[CreateEditViewModel::class.java]
         val item = tempItem
-        if (item != null){
-            Log.d("KEEEEEEEEK", "$item")
-            binding.editTextDescription.editText?.setText(item.text)
-            binding.spinnerPriority.setSelection(item.importance.ordinal)
-            if (item.deadline != null){
-                binding.switchCalendar.isChecked = true
-                binding.dateText.text = myDateFormat.format(item.deadline)
-            }
-            creationDate = item.creationDate
+        if (item != null) {
+            setupFields(item)
         }
         binding.close.setOnClickListener {
             onCancelPressed()
         }
+        setupButtonClickListeners()
+        setupDatePicker()
+        return view
+    }
 
-        // Настройка обработчиков нажатия на кнопки
+    /**
+     * Настраивает поля формы на основе объекта [item] типа [TodoItem].
+     *
+     * @param item Объект [TodoItem], содержащий данные для заполнения полей формы.
+     */
+    private fun setupFields(item: TodoItem) {
+        binding.editTextDescription.editText?.setText(item.text)
+        binding.spinnerPriority.setSelection(item.importance.ordinal)
+        if (item.deadline != null) {
+            binding.switchCalendar.isChecked = true
+            binding.dateText.text = myDateFormat.format(item.deadline)
+        }
+        creationDate = item.creationDate
+    }
+
+    /**
+     * Настраивает обработчики нажатия на кнопки формы.
+     */
+    private fun setupButtonClickListeners() {
         binding.save.setOnClickListener {
-            // Извлечение данных из полей ввода
             val description = binding.editTextDescription.editText?.text.toString()
             val priority = binding.spinnerPriority.selectedItem.toString()
-            val imp = when (priority){
-                 "!! Высокий" -> Importance.IMPORTANT
-                 "Низкий"-> Importance.BASIC
-                 else -> Importance.LOW
+            val imp = when (priority) {
+                "!! Высокий" -> Importance.IMPORTANT
+                "Низкий" -> Importance.BASIC
+                else -> Importance.LOW
             }
-            // Проверка, новый объект или нет и запись даты изменения если старый
             val modify = Date()
-            if (item == null)
+            if (tempItem == null)
+            // Если [tempItem] равен null, создается новый [TodoItem] с использованием UUID.randomUUID()
                 createEditViewModel.saveTodoItem(TodoItem(UUID.randomUUID(), description, imp, deadlineDate, false, creationDate, modify))
-            else
-                createEditViewModel.updateTodoItem(TodoItem(item.id, description, imp, deadlineDate, false, creationDate, modify))
+            else {
+                // В противном случае, обновляется существующий [TodoItem]
+                tempItem?.text = description
+                createEditViewModel.updateTodoItem()
+            }
             onCancelPressed()
         }
 
-        // Удаление элемента с использованием метода навигатора (сразу возварщение)
         binding.buttonDelete.setOnClickListener {
-            if (item != null){
-                createEditViewModel.deleteTodoItem(item)
+            if (tempItem != null) {
+                createEditViewModel.deleteTodoItem(tempItem!!)
                 onCancelPressed()
             }
         }
+    }
 
-        // Настройка DatePicker для выбора даты дедлайна
+    /**
+     * Настраивает DatePicker для выбора даты дедлайна.
+     * При выборе даты обновляет текстовое поле [dateText] и переменную [deadlineDate].
+     */
+    private fun setupDatePicker() {
         val datePicker = MaterialDatePicker.Builder.datePicker().setTitleText("Дата дедлайна").build()
         datePicker.addOnPositiveButtonClickListener {
             binding.dateText.text = myDateFormat.format(it)
             deadlineDate = Date(it)
         }
-        // Обработчик переключения календаря
         binding.switchCalendar.setOnClickListener {
-            if (binding.switchCalendar.isChecked){
+            if (binding.switchCalendar.isChecked) {
                 datePicker.show(this.parentFragmentManager, null)
-            }
-            else{
+            } else {
                 deadlineDate = null
                 binding.dateText.text = ""
             }
         }
-        return view
     }
-
     /**
      * Обрабатывает нажатие на кнопку отмены.
      */

@@ -1,5 +1,6 @@
 package com.example.todoapp.retrofit
 
+import com.example.todoapp.retrofit.model.ApiEntity
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -27,7 +28,10 @@ interface TodoItemsApiService {
      * @param request Тело запроса в виде [ApiEntity].
      */
     @PATCH("list")
-    suspend fun updateTodoItems(@Header("X-Last-Known-Revision") revision: Int, @Body request: ApiEntity): ApiEntity
+    suspend fun updateTodoItems(
+        @Header("X-Last-Known-Revision") revision: Int,
+        @Body request: ApiEntity
+    ): ApiEntity
 
     /**
      * Получает элемент списка задач по указанному идентификатору.
@@ -44,7 +48,10 @@ interface TodoItemsApiService {
      * @param request Тело запроса в виде [ApiEntity].
      */
     @POST("list")
-    suspend fun postTodoItem(@Header("X-Last-Known-Revision") revision: Int, @Body request: ApiEntity): ApiEntity
+    suspend fun postTodoItem(
+        @Header("X-Last-Known-Revision") revision: Int,
+        @Body request: ApiEntity
+    ): ApiEntity
 
     /**
      * Обновляет элемент списка задач с указанным идентификатором.
@@ -54,7 +61,11 @@ interface TodoItemsApiService {
      * @param request Тело запроса в виде [ApiEntity].
      */
     @PUT("list/{id}")
-    suspend fun putTodoItem(@Header("X-Last-Known-Revision") revision: Int, @Path("id") id: String, @Body request: ApiEntity): ApiEntity
+    suspend fun putTodoItem(
+        @Header("X-Last-Known-Revision") revision: Int,
+        @Path("id") id: String,
+        @Body request: ApiEntity
+    ): ApiEntity
 
     /**
      * Удаляет элемент списка задач с указанным идентификатором.
@@ -63,5 +74,8 @@ interface TodoItemsApiService {
      * @param id Идентификатор элемента.
      */
     @DELETE("list/{id}")
-    suspend fun deleteTodoItem(@Header("X-Last-Known-Revision") revision: Int, @Path("id") id: String): ApiEntity
+    suspend fun deleteTodoItem(
+        @Header("X-Last-Known-Revision") revision: Int,
+        @Path("id") id: String
+    ): ApiEntity
 }

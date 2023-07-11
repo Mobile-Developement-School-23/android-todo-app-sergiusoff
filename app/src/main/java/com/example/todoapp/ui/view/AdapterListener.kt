@@ -1,4 +1,4 @@
-package com.example.todoapp.view
+package com.example.todoapp.ui.view
 
 import com.example.todoapp.model.TodoItem
 

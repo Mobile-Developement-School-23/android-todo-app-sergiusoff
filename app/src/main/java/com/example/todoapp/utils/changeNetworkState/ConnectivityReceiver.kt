@@ -1,4 +1,4 @@
-package com.example.todoapp.retrofit
+package com.example.todoapp.utils.changeNetworkState
 
 import android.content.BroadcastReceiver
 import android.content.Context

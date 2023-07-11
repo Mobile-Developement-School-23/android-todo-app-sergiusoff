@@ -1,35 +1,44 @@
-package com.example.todoapp.view
+package com.example.todoapp.ui.view
 
+import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.todoapp.R
-import com.example.todoapp.databinding.FragmentCreateEditBinding
+import com.example.todoapp.appComponent
 import com.example.todoapp.databinding.FragmentTodoListBinding
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.utils.navigator
-import com.example.todoapp.viewmodel.TodoListViewModel
+import com.example.todoapp.ioc.TodoListViewModelFactory
+import com.example.todoapp.ui.stateholders.TodoListViewModel
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Фрагмент списка задач TodoList.
  */
 class TodoListFragment : Fragment(), AdapterListener {
-    private lateinit var todoListViewModel: TodoListViewModel
+    private val todoListViewModel: TodoListViewModel by viewModels { factory }
     private var _binding: FragmentTodoListBinding? = null
     private val binding get() = _binding!!
     private lateinit var todoItemAdapter: TodoItemAdapter
-    private var jobs: MutableList<Job> = mutableListOf()
+
+    @Inject
+    lateinit var factory: TodoListViewModelFactory
+
+    override fun onAttach(context: Context) {
+        context.appComponent.inject(this)
+        super.onAttach(context)
+    }
 
     /**
      * Создает и возвращает представление фрагмента.
@@ -56,7 +65,11 @@ class TodoListFragment : Fragment(), AdapterListener {
      */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        addAdapter()
+        addObserversAndListeners(view)
+    }
 
+    private fun addAdapter() {
         // Создание адаптера для списка задач
         todoItemAdapter = TodoItemAdapter(emptyList(), requireContext())
         todoItemAdapter.setTodoItemListener(this)
@@ -66,27 +79,27 @@ class TodoListFragment : Fragment(), AdapterListener {
         binding.todosView.addItemDecoration(TodoItemDecorator(bottomOffset = 16))
         // Создание объекта ItemTouchHelper для обработки жестов
         val itemTouchHelperCallback = ItemTouchHelperCallback(todoItemAdapter)
-        val touchHelper = ItemTouchHelper(itemTouchHelperCallback)
-        touchHelper.attachToRecyclerView(binding.todosView)
-        // Получение экземпляра ViewModel для управления списком задач
-        todoListViewModel = ViewModelProvider(this)[TodoListViewModel::class.java]
-
-        todoListViewModel.showSnackbarEvent.observe(viewLifecycleOwner) { event ->
-            event.getContentIfNotHandled()?.let { errorMessage ->
-                Snackbar.make(view, errorMessage, Snackbar.LENGTH_LONG).show()
-            }
-        }
 
         // Запуск наблюдателя жизненного цикла фрагмента для отслеживания изменений в списке задач
-
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                Log.d("NetworkSchedulerService", "UPDATE_VIEW")
                 todoListViewModel.todoItems.collect {
                     todoItemAdapter.updateItems(it)
                     binding.subtitle.text = getString(R.string.rdy_count)
                         .format(it.count { item -> item.isDone }, it.size)
                 }
+            }
+        }
+
+        val touchHelper = ItemTouchHelper(itemTouchHelperCallback)
+        touchHelper.attachToRecyclerView(binding.todosView)
+    }
+
+    private fun addObserversAndListeners(view: View) {
+        // Получение экземпляра ViewModel для управления списком задач
+        todoListViewModel.showSnackbarEvent.observe(viewLifecycleOwner) { event ->
+            event.getContentIfNotHandled()?.let { errorMessage ->
+                Snackbar.make(view, errorMessage, Snackbar.LENGTH_LONG).show()
             }
         }
 
@@ -96,7 +109,7 @@ class TodoListFragment : Fragment(), AdapterListener {
             binding.motionLayout.progress = seekPosition
         }
 
-        // Пусть будет refresh пока вместо глазика
+        // обновление данных с сервера
         binding.refreshBtn.setOnClickListener {
             todoListViewModel.fetchData()
         }

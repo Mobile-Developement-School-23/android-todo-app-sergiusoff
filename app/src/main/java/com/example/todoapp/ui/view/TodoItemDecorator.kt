@@ -1,4 +1,4 @@
-package com.example.todoapp.view
+package com.example.todoapp.ui.view
 
 import android.graphics.Rect
 import android.view.View

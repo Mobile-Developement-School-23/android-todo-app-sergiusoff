@@ -1,10 +1,9 @@
-package com.example.todoapp.view
+package com.example.todoapp.ui.view
 
 import android.graphics.Canvas
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.todoapp.R
-import com.example.todoapp.utils.SwipeBackgroundHelper
 
 /**
  * Callback-класс для обработки жестов перемещения и свайпа элементов в RecyclerView.
@@ -69,7 +68,12 @@ class ItemTouchHelperCallback(val adapter: ItemTouchSwapable) : ItemTouchHelper.
             println(dX) // Выводим значение смещения по оси X в консоль (для отладки)
             val viewItem = viewHolder.itemView // Получаем View элемента
             val sym = if (dX < 0) R.drawable.delete else R.drawable.check // Определяем иконку в зависимости от направления свайпа
-            SwipeBackgroundHelper.paintDrawCommandToStart(c, viewItem, sym, dX) // Рисуем задний фон элемента с иконкой
+            SwipeBackgroundHelper.paintDrawCommandToStart(
+                c,
+                viewItem,
+                sym,
+                dX
+            ) // Рисуем задний фон элемента с иконкой
         }
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
     }

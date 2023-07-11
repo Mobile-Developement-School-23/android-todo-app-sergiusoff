@@ -1,4 +1,4 @@
-package com.example.todoapp.retrofit
+package com.example.todoapp.retrofit.model
 
 /**
  * sealed класс, представляющий результат сетевого запроса.

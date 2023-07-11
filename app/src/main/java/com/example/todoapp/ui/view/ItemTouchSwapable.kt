@@ -1,4 +1,4 @@
-package com.example.todoapp.view
+package com.example.todoapp.ui.view
 
 /**
  * Интерфейс, определяющий возможность перемещения и проверки элементов списка с помощью смахивания.

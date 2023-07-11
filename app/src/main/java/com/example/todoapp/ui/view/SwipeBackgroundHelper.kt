@@ -1,4 +1,4 @@
-package com.example.todoapp.utils
+package com.example.todoapp.ui.view
 
 import android.graphics.*
 import android.graphics.drawable.Drawable

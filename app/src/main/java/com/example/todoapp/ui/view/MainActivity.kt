@@ -1,4 +1,4 @@
-package com.example.todoapp.view
+package com.example.todoapp.ui.view
 
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
@@ -12,33 +12,31 @@ import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.ViewModelProvider
 import com.example.todoapp.R
+import com.example.todoapp.appComponent
 import com.example.todoapp.databinding.ActivityMainBinding
 import com.example.todoapp.model.TodoItem
-import com.example.todoapp.model.UpdateDataWorker
-import com.example.todoapp.retrofit.NetworkSchedulerService
+import com.example.todoapp.utils.worker.UpdateDataWorker
+import com.example.todoapp.utils.changeNetworkState.NetworkSchedulerService
+import com.example.todoapp.ioc.DataSynchronizer
 import com.example.todoapp.utils.Navigator
-import com.example.todoapp.viewmodel.SharedViewModel
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
+import javax.inject.Inject
 
 /**
  * Основная активность приложения, реализующая навигацию между фрагментами и операции с элементами списка дел.
  */
 class MainActivity : AppCompatActivity(), Navigator {
-    private lateinit var sharedViewModel: SharedViewModel
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        appComponent.inject(this)
 
         // Создание экземпляра привязки для разметки activity_main.xml
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        // Получение экземпляра SharedViewModel с использованием ViewModelProvider
-        sharedViewModel = ViewModelProvider(this)[SharedViewModel::class.java]
 
         // Настройка цвета системной панели
         val window: Window = window
@@ -59,22 +57,23 @@ class MainActivity : AppCompatActivity(), Navigator {
 
         // Скрытие плавающей кнопки "Добавить", если текущий фрагмент - CreateEditFragment (при пересоздании экрана)
         if (supportFragmentManager.findFragmentById(R.id.container) != null &&
-            supportFragmentManager.findFragmentById(R.id.container) is CreateEditFragment){
+            supportFragmentManager.findFragmentById(R.id.container) is CreateEditFragment
+        ){
             findViewById<FloatingActionButton>(R.id.floatingActionButton).hide()
         }
 
-        // Наблюдение за изменениями в LiveData todoItemProcess
-        sharedViewModel.todoItemProcess.observe(this) { event ->
-            Log.d("MainActivity", event.peekContent())
+        // Запуск планировщика задач
+        scheduleJob()
+    }
 
+    @Inject
+    fun checkAddEditResults(dataSynchronizer: DataSynchronizer){
+        dataSynchronizer.todoItemProcess.observe(this){event ->
             // Получение и обработка события, если оно не было обработано ранее
             event.getContentIfNotHandled()?.let { result ->
                 Snackbar.make(binding.root, result, Snackbar.LENGTH_LONG).show()
             }
         }
-
-        // Запуск планировщика задач
-        scheduleJob()
     }
 
     /**
@@ -125,10 +124,9 @@ class MainActivity : AppCompatActivity(), Navigator {
 
     override fun onStart() {
         super.onStart()
-
         // Запуск службы NetworkSchedulerService и запланированной работы UpdateDataWorker
         val startServiceIntent = Intent(this, NetworkSchedulerService::class.java)
         startService(startServiceIntent)
-        UpdateDataWorker.enqueuePeriodicWork()
+        UpdateDataWorker.enqueuePeriodicWork(this)
     }
 }
