@@ -12,21 +12,22 @@ import androidx.core.app.NotificationCompat
 import com.example.todoapp.R
 import com.example.todoapp.di.AppScope
 import com.example.todoapp.model.Importance
+import com.example.todoapp.model.TodoItem
+import com.example.todoapp.ui.view.CreateEditFragment
+import com.example.todoapp.ui.view.MainActivity
 import javax.inject.Inject
 
-const val notificationID = 1
-const val channelID = "channel1"
-const val groupID = "channel1"
-const val group_name = "groooooup"
-const val channelName = "MFC (name)"
-const val channelDesc = "my first channel (desc)"
-const val titleExtra = "titleExtra"
-const val messageExtra = "messageExtra"
+
+const val channelID = "ChannelID1"
+const val groupID = "GroupID1"
+const val group_name = "GroupName"
+const val channelName = "ChannelName"
+const val channelDesc = "ChannelAboutDeadlines"
 
 @AppScope
 class NotificationUtils @Inject constructor(private val context: Context) {
     // Функция для создания уведомления
-    fun showNotification(title: String, message: String) {
+    fun showNotification(todoItem: TodoItem) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             notificationManager.createNotificationChannelGroup(
@@ -48,20 +49,19 @@ class NotificationUtils @Inject constructor(private val context: Context) {
 
             val notificationBuilder = NotificationCompat.Builder(context)
                 .setSmallIcon(R.drawable.app_icon)
-                .setContentTitle(title)
-                .setContentText(message)
+                .setContentTitle("${todoItem.importance} IMPORTANCE")
+                .setContentText(todoItem.text)
                 .setChannelId(channelID)
-
+                .setContentIntent(createOpenPendingIntent(todoItem))
+                .addAction(R.drawable.down_arrow, "Отложить на сутки", createPostponePendingIntent(todoItem))
             notificationManager.notify(0, notificationBuilder.build())
         }
     }
 
-    // Функция для установки оповещения
-    fun setAlarm(timeInMillis: Long, notificationText: String, notificationImportance: String) {
+    fun setAlarm(timeInMillis: Long, todoItem: TodoItem) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context, AlarmReceiver::class.java)
-        intent.putExtra("notification_text", notificationText)
-        intent.putExtra("notification_importance", notificationImportance)
+        intent.putExtra("todoItem", todoItem)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             System.currentTimeMillis().toInt(),
@@ -69,5 +69,28 @@ class NotificationUtils @Inject constructor(private val context: Context) {
             PendingIntent.FLAG_IMMUTABLE
         )
         alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
+    }
+
+    private fun createPostponePendingIntent(todoItem: TodoItem): PendingIntent {
+        val intent = Intent(context, PostponeReceiver::class.java)
+        intent.putExtra("todoItem", todoItem)
+        return PendingIntent.getBroadcast(
+            context,
+            System.currentTimeMillis().toInt(),
+            intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    private fun createOpenPendingIntent(todoItem: TodoItem): PendingIntent {
+        val intent = Intent(context, MainActivity::class.java)
+        intent.putExtra("todoItem", todoItem)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        return PendingIntent.getActivity(
+            context,
+            System.currentTimeMillis().toInt(),
+            intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
     }
 }

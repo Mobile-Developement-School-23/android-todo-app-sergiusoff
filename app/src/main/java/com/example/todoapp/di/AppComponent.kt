@@ -20,6 +20,7 @@ import dagger.Component
  */
 @AppScope
 @Component(modules = [DBModule::class, NetworkModule::class, AppBindModule::class, NotificationModule::class])
+
 interface AppComponent {
     /**
      * Метод для инъекции зависимостей в `MainActivity`.

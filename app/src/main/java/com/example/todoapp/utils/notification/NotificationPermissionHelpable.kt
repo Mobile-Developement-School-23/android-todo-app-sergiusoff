@@ -5,13 +5,6 @@ import android.content.Context
 
 interface NotificationPermissionHelpable {
     fun showNotificationPermission(activity: Activity)
-
-    fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray,
-        context: Context
-    )
     fun showExplanation(
         context: Context,
         title: String,

@@ -1,17 +1,20 @@
 package com.example.todoapp.ui.view
 
 import android.Manifest
+import android.app.Activity
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Window
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -64,17 +67,21 @@ class MainActivity : AppCompatActivity(), Navigator {
             showDetails(null)
         }
 
-        // Скрытие плавающей кнопки "Добавить", если текущий фрагмент - CreateEditFragment (при пересоздании экрана)
-        if (supportFragmentManager.findFragmentById(R.id.container) != null &&
-            supportFragmentManager.findFragmentById(R.id.container) is CreateEditFragment
-        ){
-            findViewById<FloatingActionButton>(R.id.floatingActionButton).hide()
-        }
-
         scheduleJob()
         applySavedTheme()
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            supportFragmentManager.findFragmentById(R.id.container) == null) {
             notificationHelper.showNotificationPermission(this)
+        }
+
+        val todoItem = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getSerializableExtra("todoItem", TodoItem::class.java)
+        } else {
+            intent.getSerializableExtra("todoItem")
+        }
+        if (todoItem != null){
+            showDetails(todoItem as TodoItem)
         }
     }
 
@@ -162,5 +169,6 @@ class MainActivity : AppCompatActivity(), Navigator {
         startService(startServiceIntent)
         UpdateDataWorker.enqueuePeriodicWork(this)
     }
+
 
 }

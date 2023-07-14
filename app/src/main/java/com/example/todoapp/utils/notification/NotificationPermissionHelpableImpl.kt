@@ -14,16 +14,6 @@ class NotificationPermissionHelpableImpl : NotificationPermissionHelpable {
         notificationHelper.showNotificationPermission(activity)
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray,
-        context: Context
-    ) {
-        val notificationHelper = NotificationPermissionHelper()
-        notificationHelper.onRequestPermissionsResult(requestCode, permissions, grantResults, context)
-    }
-
     override fun showExplanation(
         context: Context,
         title: String,

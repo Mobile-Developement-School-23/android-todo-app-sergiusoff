@@ -53,8 +53,8 @@ class CreateEditViewModel(
     }
 
     private fun setAlarmForTodoItem(item: TodoItem) {
-        val timeInMillis = item.deadline?.time ?: return  // Получаем время в миллисекундах из свойства deadline
-//        val timeInMillis = System.currentTimeMillis() + 12000
-        notificationUtils.setAlarm(timeInMillis, item.text, item.importance.name)
+        val timeInMillis = item.deadline?.time ?: return
+//        Log.d("NotificationTime", ((timeInMillis - System.currentTimeMillis()) / 1000).toString())
+        notificationUtils.setAlarm(timeInMillis, todoItem)
     }
 }

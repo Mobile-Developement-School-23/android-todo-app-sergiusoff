@@ -55,22 +55,23 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
+            android:minHeight="56dp"
             android:orientation="horizontal">
 
             <RadioButton
                 android:id="@+id/lightMode"
                 style="@style/body"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:textColor="@color/label_primary"
-                android:text="Светлая тема" />
+                android:text="Светлая тема"
+                android:textColor="@color/label_primary" />
 
             <RadioButton
                 android:id="@+id/systemMode"
                 style="@style/body"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="Как в системе"
                 android:textColor="@color/label_primary" />
@@ -79,22 +80,12 @@
                 android:id="@+id/darkMode"
                 style="@style/body"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:textColor="@color/label_primary"
-                android:text="Тёмная тема" />
+                android:text="Тёмная тема"
+                android:textColor="@color/label_primary" />
 
         </RadioGroup>
-
-        <TextView
-            android:id="@+id/notificationHeader"
-            style="@style/H2"
-            android:layout_marginTop="16dp"
-            android:layout_marginStart="8dp"
-            android:textColor="@color/label_primary"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Разрешение уведомлений" />
 
     </LinearLayout>
 

@@ -30,6 +30,12 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".utils.notification.PostponeReceiver"
+            android:enabled="true"
+            android:exported="true">
+        </receiver>
+
 
         <service
             android:name=".utils.changeNetworkState.NetworkSchedulerService"

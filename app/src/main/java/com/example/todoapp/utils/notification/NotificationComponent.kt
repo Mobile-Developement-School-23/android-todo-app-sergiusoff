@@ -5,4 +5,5 @@ import dagger.Subcomponent
 @Subcomponent
 interface NotificationComponent {
     fun inject(alarmReceiver: AlarmReceiver)
+    fun inject(postponeReceiver: PostponeReceiver)
 }
