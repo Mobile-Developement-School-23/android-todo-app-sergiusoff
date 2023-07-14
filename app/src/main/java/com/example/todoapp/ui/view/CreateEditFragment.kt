@@ -2,15 +2,21 @@ package com.example.todoapp.ui.view
 
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
+import android.widget.Button
+import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.todoapp.R
@@ -22,6 +28,7 @@ import com.example.todoapp.model.TodoItem
 import com.example.todoapp.ui.stateholders.CreateEditViewModel
 import com.example.todoapp.utils.navigator
 import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import java.text.SimpleDateFormat
@@ -178,10 +185,66 @@ class CreateEditFragment : Fragment() {
         }
 
         binding.buttonDelete.setOnClickListener {
-            if (tempItem != null) {
-                createEditViewModel.deleteTodoItem(tempItem!!)
-                onCancelPressed()
+            val snackbar = Snackbar.make(binding.root, "", Snackbar.LENGTH_INDEFINITE)
+            val deleteText = "Удалить ${tempItem?.text}"
+
+            val startColor = ContextCompat.getColor(requireContext(), R.color.back_secondary)
+            val endColor = ContextCompat.getColor(requireContext(), R.color.label_secondary)
+
+            val customView = layoutInflater.inflate(R.layout.snackbar_delete, null)
+            customView.findViewById<TextView>(R.id.snackbar_text).text = deleteText
+            val cancelButton = customView.findViewById<Button>(R.id.button_cancel)
+
+            snackbar.view.setBackgroundColor(startColor)
+            val snackbarLayout = snackbar.view as Snackbar.SnackbarLayout
+            snackbarLayout.findViewById<TextView>(com.google.android.material.R.id.snackbar_text).visibility = View.INVISIBLE
+
+            val duration = 5000L // Длительность отсчёта в миллисекундах
+
+            val colorAnimator = ValueAnimator.ofArgb(startColor, endColor)
+            colorAnimator.duration = duration
+
+            colorAnimator.addUpdateListener { animator ->
+                val color = animator.animatedValue as Int
+                snackbarLayout.setBackgroundColor(color)
             }
+
+            lateinit var countDownTimer: CountDownTimer
+            cancelButton.setOnClickListener {
+                countDownTimer.cancel()
+                snackbar.dismiss()
+            }
+            snackbarLayout.addView(customView, 0)
+
+            val animationDelay = 100L
+
+            countDownTimer = object : CountDownTimer(5000, 1000) {
+                override fun onTick(millisUntilFinished: Long) {
+                    val secondsLeft = millisUntilFinished / 1000
+                    val timerTextView = customView.findViewById<TextView>(R.id.timer_text)
+                    timerTextView.text = secondsLeft.toString()
+                    timerTextView.setTextColor(endColor)
+                }
+
+                override fun onFinish() {
+                    createEditViewModel.deleteTodoItem(tempItem!!)
+                    onCancelPressed()
+                }
+            }
+
+            snackbarLayout.postDelayed({
+                snackbarLayout.startAnimation(
+                    AnimationUtils.loadAnimation(
+                        requireContext(),
+                        R.anim.slide_up
+                    )
+                )
+
+                colorAnimator.start()
+                countDownTimer.start()
+            }, animationDelay)
+
+            snackbar.show()
         }
 
         binding.switchCalendar.setOnClickListener {
