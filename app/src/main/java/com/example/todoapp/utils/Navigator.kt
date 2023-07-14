@@ -2,7 +2,6 @@ package com.example.todoapp.utils
 
 import androidx.fragment.app.Fragment
 import com.example.todoapp.model.TodoItem
-import java.util.UUID
 
 /**
  * Возвращает экземпляр навигатора, связанного с активностью фрагмента.
@@ -25,4 +24,6 @@ interface Navigator {
      * Отображает список задач.
      */
     fun showList()
+
+    fun showSettings()
 }

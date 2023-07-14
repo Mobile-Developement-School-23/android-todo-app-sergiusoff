@@ -142,7 +142,8 @@ class TodoItemsRepositoryImpl @Inject constructor(
      * @return Результат запроса в виде [NetworkResult].
      */
     override suspend fun postAllItemsOnBack(newItems: List<TodoItem>): NetworkResult<ApiEntity> =
-        executeNetworkRequest { todoItemsApiService.updateTodoItems(revision, ApiEntity(null, null, newItems, revision)) }
+        executeNetworkRequest { todoItemsApiService.updateTodoItems(revision,
+            ApiEntity(null, null, newItems, revision)) }
 
     /**
      * Получает элемент списка задач по его идентификатору из удаленного источника данных.
@@ -169,7 +170,8 @@ class TodoItemsRepositoryImpl @Inject constructor(
      * @return Результат запроса в виде [NetworkResult].
      */
     override suspend fun putItemOnBack(item: TodoItem): NetworkResult<ApiEntity> =
-        executeNetworkRequest { todoItemsApiService.putTodoItem(revision, item.id.toString(), ApiEntity(null, item, null, null)) }
+        executeNetworkRequest { todoItemsApiService.putTodoItem(revision, item.id.toString(),
+            ApiEntity(null, item, null, null)) }
 
     /**
      * Удаляет элемент списка задач на удаленном сервере.

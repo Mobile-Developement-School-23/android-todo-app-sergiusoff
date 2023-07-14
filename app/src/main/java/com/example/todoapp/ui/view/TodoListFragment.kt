@@ -2,8 +2,8 @@ package com.example.todoapp.ui.view
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.*
-
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -14,12 +14,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.todoapp.R
 import com.example.todoapp.appComponent
 import com.example.todoapp.databinding.FragmentTodoListBinding
-import com.example.todoapp.model.TodoItem
-import com.example.todoapp.utils.navigator
 import com.example.todoapp.ioc.TodoListViewModelFactory
+import com.example.todoapp.model.TodoItem
+import com.example.todoapp.model.TodoItemsRepositoryImpl
 import com.example.todoapp.ui.stateholders.TodoListViewModel
+import com.example.todoapp.utils.navigator
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -112,6 +112,10 @@ class TodoListFragment : Fragment(), AdapterListener {
         // обновление данных с сервера
         binding.refreshBtn.setOnClickListener {
             todoListViewModel.fetchData()
+        }
+
+        binding.settingsBtn.setOnClickListener {
+            navigator().showSettings()
         }
     }
 

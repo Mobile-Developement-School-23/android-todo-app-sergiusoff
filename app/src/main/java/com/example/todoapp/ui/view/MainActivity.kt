@@ -1,25 +1,32 @@
 package com.example.todoapp.ui.view
 
+import android.Manifest
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Window
 import android.view.WindowManager
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager
 import com.example.todoapp.R
 import com.example.todoapp.appComponent
 import com.example.todoapp.databinding.ActivityMainBinding
-import com.example.todoapp.model.TodoItem
-import com.example.todoapp.utils.worker.UpdateDataWorker
-import com.example.todoapp.utils.changeNetworkState.NetworkSchedulerService
 import com.example.todoapp.ioc.DataSynchronizer
+import com.example.todoapp.model.TodoItem
 import com.example.todoapp.utils.Navigator
+import com.example.todoapp.utils.changeNetworkState.NetworkSchedulerService
+import com.example.todoapp.utils.notification.NotificationPermissionHelpable
+import com.example.todoapp.utils.worker.UpdateDataWorker
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import javax.inject.Inject
@@ -30,6 +37,8 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity(), Navigator {
     private lateinit var binding: ActivityMainBinding
 
+    @Inject
+    lateinit var notificationHelper: NotificationPermissionHelpable
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         appComponent.inject(this)
@@ -62,8 +71,11 @@ class MainActivity : AppCompatActivity(), Navigator {
             findViewById<FloatingActionButton>(R.id.floatingActionButton).hide()
         }
 
-        // Запуск планировщика задач
         scheduleJob()
+        applySavedTheme()
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            notificationHelper.showNotificationPermission(this)
+        }
     }
 
     @Inject
@@ -85,6 +97,7 @@ class MainActivity : AppCompatActivity(), Navigator {
 
         // Замена текущего фрагмента на CreateEditFragment для создания/редактирования элемента
         supportFragmentManager.beginTransaction()
+            .setCustomAnimations(R.anim.slide_in, R.anim.fade_out, R.anim.fade_in, R.anim.slide_out)
             .replace(R.id.container, CreateEditFragment.newInstance(todoItem))
             .addToBackStack(null)
             .commit()
@@ -95,9 +108,21 @@ class MainActivity : AppCompatActivity(), Navigator {
      */
     override fun showList() {
         binding.floatingActionButton.show()
-
         // Удаление фрагментов из back stack, чтобы показать список элементов
         supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+    }
+
+    override fun onBackPressed() {
+        showList()
+    }
+
+    override fun showSettings() {
+        binding.floatingActionButton.hide()
+        supportFragmentManager.beginTransaction()
+            .setCustomAnimations(R.anim.slide_in, R.anim.fade_out, R.anim.fade_in, R.anim.slide_out)
+            .replace(R.id.container, SettingsFragment())
+            .addToBackStack(null)
+            .commit()
     }
 
     /**
@@ -115,6 +140,14 @@ class MainActivity : AppCompatActivity(), Navigator {
         val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
         jobScheduler.schedule(myJob)
     }
+    private fun applySavedTheme() {
+        val sharedPreferences = getSharedPreferences("ThemePrefs", Context.MODE_PRIVATE)
+        when (sharedPreferences.getString("selectedTheme", "system")) {
+            "light" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            "system" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+            "dark" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        }
+    }
 
     override fun onStop() {
         // Остановка службы NetworkSchedulerService при остановке активности
@@ -129,4 +162,5 @@ class MainActivity : AppCompatActivity(), Navigator {
         startService(startServiceIntent)
         UpdateDataWorker.enqueuePeriodicWork(this)
     }
+
 }

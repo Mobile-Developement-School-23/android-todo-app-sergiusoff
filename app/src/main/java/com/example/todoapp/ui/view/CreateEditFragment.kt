@@ -3,19 +3,18 @@ package com.example.todoapp.ui.view
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.todoapp.appComponent
 import com.example.todoapp.databinding.FragmentCreateEditBinding
+import com.example.todoapp.ioc.CreateEditViewModelFactory
 import com.example.todoapp.model.Importance
 import com.example.todoapp.model.TodoItem
-import com.example.todoapp.utils.navigator
-import com.example.todoapp.ioc.CreateEditViewModelFactory
 import com.example.todoapp.ui.stateholders.CreateEditViewModel
+import com.example.todoapp.utils.navigator
 import com.google.android.material.datepicker.MaterialDatePicker
 import java.text.SimpleDateFormat
 import java.util.*
@@ -32,7 +31,8 @@ class CreateEditFragment : Fragment() {
     // свойство-делегат, которое обеспечивает доступ к привязке фрагмента
     private val binding get() = _binding!!
 
-    // Целочисленное значение, переданное через аргументы фрагмента (см. onCreate()) необходимое для проверки новый/старый объект дела.
+    // Целочисленное значение, переданное через аргументы фрагмента (см. onCreate())
+    // необходимое для проверки новый/старый объект дела.
     private var tempItem: TodoItem? = null
     private val myDateFormat = SimpleDateFormat("dd MMM YYYY", Locale.getDefault()).apply {
         timeZone = TimeZone.getTimeZone("UTC")

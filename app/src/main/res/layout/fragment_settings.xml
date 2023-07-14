@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/back_primary"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:background="@color/back_primary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <Button
+                style="@style/Widget.Material3.Button.TextButton"
+                android:textSize="14sp"
+                app:textAllCaps="true"
+                android:textColor="@color/blue"
+                android:textStyle="bold"
+                android:id="@+id/save"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Сохранить"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="48dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/themeHeader"
+            style="@style/H2"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="8dp"
+            android:textColor="@color/label_primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Цветовая тема" />
+
+        <RadioGroup
+            android:id="@+id/themeRadioGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/lightMode"
+                style="@style/body"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/label_primary"
+                android:text="Светлая тема" />
+
+            <RadioButton
+                android:id="@+id/systemMode"
+                style="@style/body"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Как в системе"
+                android:textColor="@color/label_primary" />
+
+            <RadioButton
+                android:id="@+id/darkMode"
+                style="@style/body"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/label_primary"
+                android:text="Тёмная тема" />
+
+        </RadioGroup>
+
+        <TextView
+            android:id="@+id/notificationHeader"
+            style="@style/H2"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="8dp"
+            android:textColor="@color/label_primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Разрешение уведомлений" />
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
