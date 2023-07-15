@@ -10,6 +10,8 @@ import com.example.todoapp.utils.worker.WorkerSubcomponent
 import com.example.todoapp.ui.view.CreateEditFragment
 import com.example.todoapp.ui.view.MainActivity
 import com.example.todoapp.ui.view.TodoListFragment
+import com.example.todoapp.utils.notification.NotificationComponent
+import com.example.todoapp.utils.notification.NotificationModule
 import dagger.BindsInstance
 import dagger.Component
 
@@ -17,7 +19,8 @@ import dagger.Component
  * Компонент Dagger, отвечающий за инъекцию зависимостей в приложение.
  */
 @AppScope
-@Component(modules = [DBModule::class, NetworkModule::class, AppBindModule::class])
+@Component(modules = [DBModule::class, NetworkModule::class, AppBindModule::class, NotificationModule::class])
+
 interface AppComponent {
     /**
      * Метод для инъекции зависимостей в `MainActivity`.
@@ -57,6 +60,9 @@ interface AppComponent {
      * @return Билдер для подкомпонента `WorkerSubcomponent`.
      */
     fun workerSubcomponentBuilder(): WorkerSubcomponent.Builder
+
+    fun notificationComponent(): NotificationComponent
+
 
     /**
      * Билдер для компонента `AppComponent`.

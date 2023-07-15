@@ -12,9 +12,10 @@
     <color name="gray">#8E8E93</color>
     <color name="gray_light">#D1D1D6</color>
     <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="transparent">#FF000000</color>
     <color name="back_primary">#F7F6F2</color>
     <color name="back_secondary">#FFFFFF</color>
     <color name="back_collide_appbar">@color/back_primary</color>
     <color name="back_elevated">#FFFFFF</color>
-
 </resources>

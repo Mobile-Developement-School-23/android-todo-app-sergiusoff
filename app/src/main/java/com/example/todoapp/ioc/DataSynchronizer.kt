@@ -7,7 +7,6 @@ import com.example.todoapp.model.Event
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.model.TodoItemsRepository
 import com.example.todoapp.retrofit.model.NetworkResult
-import com.example.todoapp.ui.view.ItemTouchSwapable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,10 +41,15 @@ class DataSynchronizer @Inject constructor(
      * @param item Элемент списка дел для сохранения.
      */
     fun saveTodoItem(item: TodoItem) {
+        if (item.text == ""){
+            setTodoItemProcess(Event("Не удалось добавить дeло:\nнеобходим текст напоминания"))
+            return
+        }
         coroutineScope.launch {
             when (val result = todoItemsRepository.addItem(item)){
                 is NetworkResult.Success -> setTodoItemProcess(Event("Данные успешно добавлены"))
-                is NetworkResult.Error -> setTodoItemProcess(Event("Не удалось добавить данные: " + result.errorMessage))
+                is NetworkResult.Error -> setTodoItemProcess(Event("Не удалось добавить данные: "
+                        + result.errorMessage))
             }
         }
     }
@@ -58,7 +62,8 @@ class DataSynchronizer @Inject constructor(
         coroutineScope.launch {
             when (val result = todoItemsRepository.updateItem(item)){
                 is NetworkResult.Success -> setTodoItemProcess(Event("Данные успешно обновлены"))
-                is NetworkResult.Error -> setTodoItemProcess(Event("Не удалось обновить данные: " + result.errorMessage))
+                is NetworkResult.Error -> setTodoItemProcess(Event("Не удалось обновить данные: "
+                        + result.errorMessage))
             }
         }
     }

@@ -96,20 +96,19 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="32dp"
-                    android:text="Важность"
+                    android:text="Приоритет задачи"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/editTextDescription" />
 
-                <Spinner
-                    android:id="@+id/spinnerPriority"
+
+                <TextView
+                    android:id="@+id/priorityAsText"
+                    style="@style/body"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="4dp"
-                    android:padding="0dp"
-                    android:minHeight="48dp"
-                    android:entries="@array/priority_array"
-                    android:prompt="@string/priority_prompt"
+                    android:text="Низкий"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/priorityText" />
 
@@ -119,8 +118,9 @@
                     android:layout_height="1dp"
                     android:background="?android:attr/listDivider"
                     android:layout_margin="16dp"
+                    android:layout_marginTop="24dp"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/spinnerPriority"
+                    app:layout_constraintTop_toBottomOf="@id/priorityAsText"
                     app:layout_constraintEnd_toEndOf="parent" />
 
 
@@ -138,12 +138,27 @@
                 <TextView
                     android:id="@+id/dateText"
                     style="@style/body"
+                    android:textColor="@color/blue"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
                     android:text=""
+                    android:visibility="gone"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/calendarText" />
+
+                <TextView
+                    android:id="@+id/timeText"
+                    style="@style/body"
+                    android:textColor="@color/blue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text=""
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="@id/dateText"
+                    app:layout_constraintStart_toEndOf="@+id/dateText"
+                    app:layout_constraintTop_toTopOf="@id/dateText" />
 
                 <Switch
                     android:id="@+id/switchCalendar"

@@ -205,18 +205,21 @@ class TodoItemAdapter(private var todoItems: List<TodoItem>, private val context
                 binding.todoItemDate.visibility = View.GONE
             }
             if (todoItem.isDone) {
-                binding.todoItemText.setTextAppearance(R.style.body_is_done)
                 binding.taskReadyFlag.setImageDrawable(checkedImage)
+                binding.taskReadyFlag.clearColorFilter()
+                binding.todoItemText.setTextAppearance(R.style.body_is_done)
                 binding.todoItemText.paintFlags = binding.todoItemText.paintFlags or STRIKE_THRU_TEXT_FLAG
                 binding.taskImportance.setColorFilter(ContextCompat.getColor(context, R.color.green))
             }
             else{
-                binding.todoItemText.setTextAppearance(R.style.body)
+                binding.taskReadyFlag.setColorFilter(ContextCompat.getColor(context, R.color.label_primary))
                 binding.taskReadyFlag.setImageDrawable(uncheckedImage)
+                binding.todoItemText.setTextAppearance(R.style.body)
                 binding.todoItemText.paintFlags = binding.todoItemText.paintFlags and STRIKE_THRU_TEXT_FLAG.inv()
                 binding.taskImportance.clearColorFilter()
                 if (!todoItem.isDone && todoItem.importance == Importance.IMPORTANT){
                     binding.taskReadyFlag.setImageDrawable(uncheckedHighImage)
+                    binding.taskReadyFlag.clearColorFilter()
                     binding.taskImportance.setColorFilter(ContextCompat.getColor(context, R.color.red))
                 }
             }

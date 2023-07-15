@@ -1,5 +1,6 @@
 package com.example.todoapp.ui.stateholders
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -9,6 +10,7 @@ import com.example.todoapp.model.TodoItem
 import com.example.todoapp.model.TodoItemsRepository
 
 import com.example.todoapp.retrofit.model.NetworkResult
+import com.example.todoapp.utils.notification.NotificationUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -21,9 +23,10 @@ import javax.inject.Inject
 /**
  * ViewModel, отвечающая за управление списком задач.
  */
-class TodoListViewModel @Inject constructor(private val todoItemsRepositoryImpl: TodoItemsRepository) : ViewModel() {
-    // Поле, содержащее экземпляр репозитория для работы с задачами
-//    private val todoItemsRepositoryImpl: TodoItemsRepositoryImpl by locateLazy()
+class TodoListViewModel @Inject constructor(
+    private val todoItemsRepositoryImpl: TodoItemsRepository,
+    private val notificationUtils: NotificationUtils
+    ) : ViewModel() {
 
     // Поле, представляющее список задач в виде LiveDataFlow
     val todoItems = todoItemsRepositoryImpl.getAll().asLiveDataFlow()

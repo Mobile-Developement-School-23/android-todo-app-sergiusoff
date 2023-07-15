@@ -1,56 +1,42 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Theme.ToDoApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
-<!--        <item name="colorPrimary">@color/purple_500</item>-->
-<!--        <item name="colorPrimaryVariant">@color/purple_700</item>-->
-<!--        <item name="colorOnPrimary">@color/white</item>-->
-<!--        &lt;!&ndash; Secondary brand color. &ndash;&gt;-->
-<!--        <item name="colorSecondary">@color/teal_200</item>-->
-<!--        <item name="colorSecondaryVariant">@color/teal_700</item>-->
-<!--        <item name="colorOnSecondary">@color/black</item>-->
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor" >@color/label_primary</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/label_primary</item>
+        <item name="colorPrimaryVariant">@color/back_elevated</item>
+        <item name="colorOnPrimary">@color/back_primary</item>
+        <item name="colorSecondary">@color/label_secondary</item>
+        <!--        <item name="colorSecondaryVariant">@color/teal_200</item>-->
+        <item name="colorOnSecondary">@color/label_secondary</item>
+<!--        <item name="android:windowLightStatusBar">true</item>-->
+<!--        <item name="android:statusBarColor" >?attr/colorPrimaryVariant</item>-->
     </style>
 
-    <style name="large_title">
-        <item name="android:textSize">32sp</item>
+    <style name="large_title" parent="H1">
         <item name="android:textColor">@color/label_primary</item>
     </style>
 
-    <style name="title">
-        <item name="android:textSize">20sp</item>
-        <item name="android:letterSpacing">0.03</item>
+    <style name="title" parent="H2">
         <item name="android:textColor">@color/label_primary</item>
     </style>
 
-    <style name="button">
-        <item name="android:textSize">14sp</item>
-        <item name="android:letterSpacing">0.01</item>
-        <item name="android:textAllCaps">true</item>
-        <item name="android:textColor">@color/blue</item>
-    </style>
-
-    <style name="FAB">
-        <item name="backgroundTint">@color/blue</item>
-    </style>
-
-
-    <style name="body">
-        <item name="android:textSize">16sp</item>
-        <item name="android:letterSpacing">0.01</item>
-        <item name="android:textColor">@color/label_primary</item>
-    </style>
-
-    <style name="body_is_done">
-        <item name="android:textSize">16sp</item>
+    <style name="subhead" parent="H3">
         <item name="android:textColor">@color/label_tertiary</item>
     </style>
 
-    <style name="subhead">
-        <item name="android:textSize">14sp</item>
+    <style name="body" parent="body_text">
         <item name="android:textColor">@color/label_primary</item>
+    </style>
+
+    <style name="body_is_done" parent="body_text">
+        <item name="android:textColor">@color/label_tertiary</item>
+    </style>
+
+    <style name="button" parent="button_text">
+        <item name="android:color">@color/blue</item>
+    </style>
+
+    <style name="FAB" parent="button">
+        <item name="android:color">?attr/colorPrimaryVariant</item>
+        <item name="android:backgroundTint">@color/blue</item>
     </style>
 </resources>
