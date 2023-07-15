@@ -5,9 +5,12 @@ import androidx.lifecycle.ViewModel
 
 import com.example.todoapp.model.TodoItem
 import com.example.todoapp.ioc.DataSynchronizer
+import com.example.todoapp.model.Importance
+import com.example.todoapp.ui.view.compose.manage.CreateEditScreenEvent
 import com.example.todoapp.utils.notification.NotificationUtils
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import java.util.Date
 
 /**
@@ -15,10 +18,13 @@ import java.util.Date
  * Основная задача этой ViewModel - сохранять, обновлять и удалять элементы списка дел через репозиторий.
  */
 class CreateEditViewModel(
-    private val todoItem: TodoItem,
+    private val tempItem: TodoItem,
     private val dataSynchronizer: DataSynchronizer,
     private val notificationUtils: NotificationUtils
 ) : ViewModel() {
+
+    private val _todoItem: MutableStateFlow<TodoItem> = MutableStateFlow(tempItem)
+    val todoItem = _todoItem.asStateFlow()
 
     /**
      * Сохраняет элемент списка дел.
@@ -26,8 +32,10 @@ class CreateEditViewModel(
      * @param todoItem Элемент списка дел для сохранения.
      */
     fun saveTodoItem(todoItem: TodoItem) {
-        Log.d("ADD_ITEM", todoItem.toString())
-        setAlarmForTodoItem(todoItem)
+        if (todoItem.text != "") {
+            Log.d("ADD_ITEM", todoItem.toString())
+            setAlarmForTodoItem(todoItem)
+        }
         dataSynchronizer.saveTodoItem(todoItem)
     }
 
@@ -36,7 +44,7 @@ class CreateEditViewModel(
      * Действие будет выполняться в течение жизни ViewModel.
      * @param todoItem Элемент списка дел для обновления.
      */
-    fun updateTodoItem() {
+    fun updateTodoItem(todoItem: TodoItem) {
         Log.d("UPDATE_ITEM", todoItem.toString())
         setAlarmForTodoItem(todoItem)
         dataSynchronizer.updateTodoItem(todoItem)
@@ -55,6 +63,29 @@ class CreateEditViewModel(
     private fun setAlarmForTodoItem(item: TodoItem) {
         val timeInMillis = item.deadline?.time ?: return
 //        Log.d("NotificationTime", ((timeInMillis - System.currentTimeMillis()) / 1000).toString())
-        notificationUtils.setAlarm(timeInMillis, todoItem)
+        notificationUtils.setAlarm(timeInMillis, todoItem.value)
+    }
+
+    private fun changeTitle(text: String) {
+        _todoItem.update { _todoItem.value.copy(text = text) }
+    }
+
+    private fun changeImportance(important: Importance) {
+        _todoItem.update { _todoItem.value.copy(importance = important) }
+    }
+
+    private fun changeDeadline(deadline: Date?) {
+        _todoItem.update { _todoItem.value.copy(deadline = deadline) }
+    }
+    fun receiveEvent(event: CreateEditScreenEvent) {
+        when (event) {
+            is CreateEditScreenEvent.ChangeText -> changeTitle(event.text)
+            is CreateEditScreenEvent.ChangeImportance -> changeImportance(event.importance)
+            is CreateEditScreenEvent.ChangeDeadline -> changeDeadline(event.deadline)
+            CreateEditScreenEvent.ClearDeadline -> changeDeadline(null)
+            CreateEditScreenEvent.CreateTodoItem -> saveTodoItem(_todoItem.value)
+            CreateEditScreenEvent.SaveTodoItem -> updateTodoItem(_todoItem.value)
+            CreateEditScreenEvent.DeleteTodoItem -> deleteTodoItem(_todoItem.value)
+        }
     }
 }

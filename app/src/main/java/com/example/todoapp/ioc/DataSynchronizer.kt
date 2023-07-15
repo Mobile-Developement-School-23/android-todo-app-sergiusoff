@@ -41,6 +41,10 @@ class DataSynchronizer @Inject constructor(
      * @param item Элемент списка дел для сохранения.
      */
     fun saveTodoItem(item: TodoItem) {
+        if (item.text == ""){
+            setTodoItemProcess(Event("Не удалось добавить дeло:\nнеобходим текст напоминания"))
+            return
+        }
         coroutineScope.launch {
             when (val result = todoItemsRepository.addItem(item)){
                 is NetworkResult.Success -> setTodoItemProcess(Event("Данные успешно добавлены"))
