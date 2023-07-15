@@ -40,7 +40,7 @@ class NetworkModule {
                 OkHttpClient.Builder().addInterceptor { chain ->
                     // Изменяем запрос, добавляя заголовок авторизации Bearer Token
                     val modifiedRequest = chain.request().newBuilder()
-                        .header("Authorization", "Bearer agouara")
+                        .header("Authorization", "<YOUR_TOKEN_SHOULD_BE_THERE>")
                         .build()
                     chain.proceed(modifiedRequest)
                 }.build()
